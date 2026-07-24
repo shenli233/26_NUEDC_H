@@ -5,3 +5,6 @@ mx.scratch
 /.vscode/
 /.clangd
 *.launch
+.cproject
+.mxproject
+.project

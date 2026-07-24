@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dma.h"
+#include "stm32f4xx_hal.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -57,9 +58,11 @@ uint32_t pos2 = 0;
 uint32_t pos1 = 0;
 float Motor_Cur_Pos1 = 0.0f;
 float Motor_Cur_Pos2 = 0.0f;
-//2的角度为正，1的角度为负
-uint8_t dir_m1 = 1, dir_m2 = 0;
-uint8_t state = 0; // 0: idle, 1: moving forward, 2: turning
+float Motor_cache_Pos1 = 0.0f;//记录当前电机位置
+float Motor_cache_Pos2 = 0.0f;
+
+uint8_t dir_m1 = 1, dir_m2 = 0;//2的角度为正，1的角度为负
+uint8_t state = 0; //状态机
 
 uint8_t raw_data[11];
 short roll_raw, pitch_raw, yaw_raw;
@@ -67,8 +70,6 @@ float roll, pitch, yaw;
 uint8_t rxData[11];
 
 PID pid;
-
-float distance_pulses[Motor] = {0.0f, 0.0f};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -87,8 +88,8 @@ int __io_putchar(int ch){
 
 void Motor_Stop(PID *pid){
   pid->Angle_Error = 0.0f;
-  pid->Real_Target[0] = 0.0f;
-  pid->Real_Target[1] = 0.0f;
+  pid->Real_Speed[0] = 0.0f;
+  pid->Real_Speed[1] = 0.0f;
   pid->Turn_Out = 0.0f;
   // Emm_V5_Stop_Now(2, 0); // Immediate stop left wheel with sync flag
   // HAL_Delay(10);
@@ -158,16 +159,11 @@ int main(void)
   //调试正常启动标志
   printf("System Start OK!\r\n");
 
-  // Emm_V5_Vel_Control(1, dir_m1, pid.Target[0], 10, 1);
-  // HAL_Delay(10);
-  // Emm_V5_Vel_Control(2, dir_m2, pid.Target[1], 10, 1);
-  // HAL_Delay(10);
-  // Emm_V5_Synchronous_motion(0);
   //初始化PID
   PID_Init(&pid);
 
-  pid.Target[0]=60;
-  pid.Target[1]=60;
+  pid.Speed[0]=60;
+  pid.Speed[1]=60;
   state = 1;
 
   PID_Start(&pid);
@@ -182,9 +178,9 @@ int main(void)
       case 1:
         //电机1的角度为负，电机2的角度为正)
         if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 120.0f) && pid.flag == 1){
+          PID_Stop(&pid);
           Motor_Stop(&pid);
           state = 2;
-          PID_Stop(&pid);
         }
         break;
       case 2:
@@ -195,18 +191,25 @@ int main(void)
         HAL_Delay(10);
         if(yaw >= 165.0f || yaw <= -165.0f){
           Motor_Stop(&pid);
+          HAL_Delay(500);
+          Motor_cache_Pos1 = Motor_Cur_Pos1;
+          Motor_cache_Pos2 = Motor_Cur_Pos2;
           state = 3;
         }
         break;
       case 3:
-        // dir_m1 = 1;
-        // pid.Target[0]=60;
-        // pid.Target[1]=60;
-        // PID_Start(&pid);
-        // if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 120.0f) && pid.flag == 1){
-        //   Motor_Stop(&pid);
-        //   state = 4;
-        // }
+        dir_m1 = 1;
+        pid.Speed[0]=60;
+        pid.Speed[1]=60;
+        pid.Target_Yaw = 180.0f;
+        PID_Start(&pid);
+        if((Motor_cache_Pos1 - Motor_Cur_Pos1 + Motor_Cur_Pos2 - Motor_cache_Pos2)/2.0f >= (2686.0f - 120.0f) && pid.flag == 1){
+          PID_Stop(&pid);
+          Motor_Stop(&pid);
+          state = 4;
+        }
+        break;
+      case 4:
         break;
       default:
         break;
@@ -266,15 +269,12 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   if (htim == &htim2) {
-    
     if(pid.flag == 1){
       PID_Run(&pid, yaw);
-
-      Emm_V5_Vel_Control_1(dir_m1, pid.Real_Target[1], 10, 0);
+      Emm_V5_Vel_Control_1(dir_m1, pid.Real_Speed[1], 10, 0);
       HAL_Delay(10);
-      Emm_V5_Vel_Control_2(dir_m2, pid.Real_Target[0], 10, 0);
+      Emm_V5_Vel_Control_2(dir_m2, pid.Real_Speed[0], 10, 0);
       HAL_Delay(10);
-
     }
   }
 }
@@ -292,7 +292,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
       Motor_Cur_Pos2 = (float)pos2 * 360.0f / 65536.0f;
       if(rxCmd2[2]) { Motor_Cur_Pos2 = -Motor_Cur_Pos2; }
 
-      // printf("Motor2 Current Position: %.2f degrees\r\n", Motor_Cur_Pos2);
+      // printf("Motor2: %.2f degrees\r\n", Motor_Cur_Pos2);
     }
     HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rxCmd2, sizeof(rxCmd2));
     __HAL_DMA_DISABLE_IT(huart2.hdmarx, DMA_IT_HT);
@@ -310,7 +310,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
       Motor_Cur_Pos1 = (float)pos1 * 360.0f / 65536.0f;
       if(rxCmd1[2]) { Motor_Cur_Pos1 = -Motor_Cur_Pos1; }
 
-      // printf("Motor1 Current Position: %.2f degrees\r\n", Motor_Cur_Pos1);
+      // printf("Motor1: %.2f degrees\r\n", Motor_Cur_Pos1);
     }
     HAL_UARTEx_ReceiveToIdle_DMA(&huart5, rxCmd1, sizeof(rxCmd1));
     __HAL_DMA_DISABLE_IT(huart5.hdmarx, DMA_IT_HT);
@@ -327,7 +327,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 		  pitch = (float)pitch_raw / 32768.0f * 180.0f;
 		  yaw   = (float)yaw_raw   / 32768.0f * 180.0f;
 
-      printf("yaw: %.2f, Target0: %.2f, Target1: %.2f, Angle_Error: %.2f\r\n", yaw, pid.Real_Target[0], pid.Real_Target[1], pid.Angle_Error);
+      // printf("yaw: %.2f, Speed0: %.2f, Speed1: %.2f, Angle_Error: %.2f\r\n", yaw, pid.Real_Speed[0], pid.Real_Speed[1], pid.Angle_Error);
 		}
 		HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxData, sizeof(rxData));
     __HAL_DMA_DISABLE_IT(huart3.hdmarx, DMA_IT_HT);

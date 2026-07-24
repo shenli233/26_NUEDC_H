@@ -5,10 +5,10 @@
 
 void PID_Init(PID* pid){
   pid->flag = 0;
-  pid->Target[0] = 0.0f;
-  pid->Target[1] = 0.0f;
-  pid->Real_Target[0] = 0.0f;
-  pid->Real_Target[1] = 0.0f;
+  pid->Speed[0] = 0.0f;
+  pid->Speed[1] = 0.0f;
+  pid->Real_Speed[0] = 0.0f;
+  pid->Real_Speed[1] = 0.0f;
   pid->Target_Yaw = 0.0f;
   pid->Kp_turn = 3.0f;
   //pid->Kd_turn = 0.005f;
@@ -38,6 +38,6 @@ void PID_Run(PID *pid, float yaw){
     if (pid->Turn_Out > 30.0f)  pid->Turn_Out = 30.0f;
     if (pid->Turn_Out < -30.0f) pid->Turn_Out = -30.0f;
       
-    pid->Real_Target[0] = pid->Target[0] - pid->Turn_Out; // Left wheel target RPM
-    pid->Real_Target[1] = pid->Target[1] + pid->Turn_Out; // Right wheel target RPM
+    pid->Real_Speed[0] = pid->Speed[0] - pid->Turn_Out; // Left wheel target RPM
+    pid->Real_Speed[1] = pid->Speed[1] + pid->Turn_Out; // Right wheel target RPM
 }

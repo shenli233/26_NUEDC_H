@@ -2,8 +2,8 @@
 
 typedef struct{
   uint8_t flag;
-  float Target[Motor];
-  float Real_Target[Motor];
+  float Speed[Motor];
+  float Real_Speed[Motor];
   float Target_Yaw;
   float Kp_turn;
   //float Kd_turn = 0.005f;

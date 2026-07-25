@@ -169,7 +169,7 @@ int main(void)
     switch (state) {
       case 1:
         //电机1的角度为负，电机2的角度为正)
-        if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= 2686.0f && pid.flag == 1){
+        if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 80.0f) && pid.flag == 1){
           PID_Stop(&pid);
           Motor_Stop(&pid);
           HAL_Delay(500);
@@ -179,11 +179,11 @@ int main(void)
       case 2:
         dir_m1 = 0;
         if(flag2 == 0){
-            Emm_V5_Vel_Control_1(dir_m1, 30, 50, 0);
-            Emm_V5_Vel_Control_2(dir_m2, 30, 50, 0);
+            Emm_V5_Vel_Control_1(dir_m1, 50, 50, 0);
+            Emm_V5_Vel_Control_2(dir_m2, 50, 50, 0);
             flag2 = 1;
         }
-        if(yaw >= 178.0f || yaw <= -178.0f){
+        if(yaw >= 179.0f || yaw <= -179.0f){
           Motor_Stop(&pid);
           HAL_Delay(500);
           Motor_cache_Pos1 = Motor_Cur_Pos1;
@@ -198,7 +198,7 @@ int main(void)
         pid.Target_Yaw = 180.0f;
         flag2 = 0;
         PID_Start(&pid);
-        if((Motor_cache_Pos1 - Motor_Cur_Pos1 + Motor_Cur_Pos2 - Motor_cache_Pos2)/2.0f >= 2686.0f && pid.flag == 1){
+        if((Motor_cache_Pos1 - Motor_Cur_Pos1 + Motor_Cur_Pos2 - Motor_cache_Pos2)/2.0f >= (2686.0f - 80.0f) && pid.flag == 1){
           PID_Stop(&pid);
           Motor_Stop(&pid);
           HAL_Delay(500);
@@ -208,11 +208,11 @@ int main(void)
       case 4:
         dir_m1 = 0;
         if(flag2 == 0){
-            Emm_V5_Vel_Control_1(dir_m1, 30, 50, 0);
-            Emm_V5_Vel_Control_2(dir_m2, 30, 50, 0);
+            Emm_V5_Vel_Control_1(dir_m1, 50, 50, 0);
+            Emm_V5_Vel_Control_2(dir_m2, 50, 50, 0);
             flag2 = 1;
         }
-        if(yaw >= -2.0f && yaw <= 2.0f){
+        if(yaw >= -1.0f && yaw <= 1.0f){
           Motor_Stop(&pid);
           HAL_Delay(500);
           Motor_cache_Pos1 = Motor_Cur_Pos1;
@@ -227,7 +227,7 @@ int main(void)
         pid.Target_Yaw = 0.0f;
         flag2 = 0;
         PID_Start(&pid);
-        if((Motor_cache_Pos1 - Motor_Cur_Pos1 + Motor_Cur_Pos2 - Motor_cache_Pos2)/2.0f >= 2686.0f && pid.flag == 1){
+        if((Motor_cache_Pos1 - Motor_Cur_Pos1 + Motor_Cur_Pos2 - Motor_cache_Pos2)/2.0f >= (2686.0f - 80.0f) && pid.flag == 1){
           PID_Stop(&pid);
           Motor_Stop(&pid);
           HAL_Delay(500);

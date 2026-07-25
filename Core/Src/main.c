@@ -63,6 +63,7 @@ float Motor_cache_Pos2 = 0.0f;
 
 uint8_t dir_m1 = 1, dir_m2 = 0;//2的角度为正，1的角度为负
 uint8_t state = 0; //状态机
+uint8_t flag2 = 0;
 
 uint8_t raw_data[11];
 short roll_raw, pitch_raw, yaw_raw;
@@ -91,18 +92,16 @@ void Motor_Stop(PID *pid){
   pid->Real_Speed[0] = 0.0f;
   pid->Real_Speed[1] = 0.0f;
   pid->Turn_Out = 0.0f;
-  // Emm_V5_Stop_Now(2, 0); // Immediate stop left wheel with sync flag
+   Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
   // HAL_Delay(10);
-  // Emm_V5_Stop_Now(1, 0); // Immediate stop right wheel with sync flag
+   Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
   // Emm_V5_Vel_Control(1, dir_m1, 0, 10, 1);
   // HAL_Delay(10);
   // Emm_V5_Vel_Control(2, dir_m2, 0, 10, 1);
   // HAL_Delay(10);
   // Emm_V5_Synchronous_motion(0);
-  Emm_V5_Vel_Control_1(dir_m1, 0, 10, 0);
-  HAL_Delay(10);
-  Emm_V5_Vel_Control_2(dir_m2, 0, 10, 0);
-  HAL_Delay(10);
+  // Emm_V5_Vel_Control_1(dir_m1, 0, 100, 0);
+  // Emm_V5_Vel_Control_2(dir_m2, 0, 100, 0);
 }
 
 /* USER CODE END 0 */
@@ -158,12 +157,13 @@ int main(void)
   __HAL_DMA_DISABLE_IT(huart3.hdmarx, DMA_IT_HT);
   //调试正常启动标志
   printf("System Start OK!\r\n");
+  HAL_TIM_Base_Start_IT(&htim2);
 
   //初始化PID
   PID_Init(&pid);
 
-  pid.Speed[0]=60;
-  pid.Speed[1]=60;
+  pid.Speed[0]=100;
+  pid.Speed[1]=100;
   state = 1;
 
   PID_Start(&pid);
@@ -180,18 +180,20 @@ int main(void)
         if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 120.0f) && pid.flag == 1){
           PID_Stop(&pid);
           Motor_Stop(&pid);
+          HAL_Delay(1000);
           state = 2;
         }
         break;
       case 2:
         dir_m1 = 0;
-        Emm_V5_Vel_Control_1(dir_m1, 30, 10, 0);
-        HAL_Delay(10);
-        Emm_V5_Vel_Control_2(dir_m2, 30, 10, 0);
-        HAL_Delay(10);
-        if(yaw >= 165.0f || yaw <= -165.0f){
+        if(flag2 == 0){
+            Emm_V5_Vel_Control_1(dir_m1, 30, 10, 0);
+            Emm_V5_Vel_Control_2(dir_m2, 30, 10, 0);
+            flag2 = 1;
+        }
+        if(yaw >= 178.0f || yaw <= -178.0f){
           Motor_Stop(&pid);
-          HAL_Delay(500);
+          HAL_Delay(100);
           Motor_cache_Pos1 = Motor_Cur_Pos1;
           Motor_cache_Pos2 = Motor_Cur_Pos2;
           state = 3;
@@ -199,12 +201,12 @@ int main(void)
         break;
       case 3:
         dir_m1 = 1;
-        pid.Speed[0]=60;
-        pid.Speed[1]=60;
+        pid.Speed[0]=100;
+        pid.Speed[1]=100;
         pid.Target_Yaw = 180.0f;
         PID_Start(&pid);
         if((Motor_cache_Pos1 - Motor_Cur_Pos1 + Motor_Cur_Pos2 - Motor_cache_Pos2)/2.0f >= (2686.0f - 120.0f) && pid.flag == 1){
-          PID_Stop(&pid);
+          pid.flag = 0;
           Motor_Stop(&pid);
           state = 4;
         }
@@ -272,9 +274,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if(pid.flag == 1){
       PID_Run(&pid, yaw);
       Emm_V5_Vel_Control_1(dir_m1, pid.Real_Speed[1], 10, 0);
-      HAL_Delay(10);
       Emm_V5_Vel_Control_2(dir_m2, pid.Real_Speed[0], 10, 0);
-      HAL_Delay(10);
     }
   }
 }

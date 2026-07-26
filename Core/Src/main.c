@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dma.h"
-#include "stm32f4xx_hal.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -27,10 +26,13 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "Emm_V5.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include "math.h"
 #include "pid.h"
+#include "xunji.h"
+#include "delay.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -60,6 +62,8 @@ float Motor_Cur_Pos1 = 0.0f;
 float Motor_Cur_Pos2 = 0.0f;
 float Motor_cache_Pos1 = 0.0f;//记录当前电机位置
 float Motor_cache_Pos2 = 0.0f;
+
+uint8_t xunji[8];
 
 uint8_t dir_m1 = 1, dir_m2 = 0;//2的角度为正，1的角度为负
 uint8_t state = 0; //状态机
@@ -156,9 +160,9 @@ int main(void)
 
   pid.Speed[0]=100;
   pid.Speed[1]=100;
-  state = 1;
+  // state = 1;//是否进入直行掉头的状态机
+  // PID_Start(&pid);
 
-  PID_Start(&pid);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -166,6 +170,10 @@ int main(void)
   
   while (1)
   {
+    key();
+    gray_read(xunji);
+    printf("xunji output:%x,%x,%x,%x,%x,%x,%x,%x",xunji[0],xunji[1],xunji[2],xunji[3],xunji[4],xunji[5],xunji[6],xunji[7]);
+
     switch (state) {
       case 1:
         //电机1的角度为负，电机2的角度为正)

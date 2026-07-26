@@ -1,3 +1,6 @@
+#ifndef __PID_H
+#define __PID_H
+
 #include "main.h"
 
 typedef struct{
@@ -16,3 +19,5 @@ void PID_Init(PID* pid);
 void PID_Start(PID *pid);
 void PID_Stop(PID *pid);
 void PID_Run(PID *pid, float yaw);
+
+#endif /* __PID_H */

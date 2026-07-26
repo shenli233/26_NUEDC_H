@@ -1,33 +1,34 @@
-#include "delay.h"
-
-#define CPU_FREQUENCY_MHZ    168
-
-void delay_us(__IO uint32_t delay)
+#include  "delay.h"
+void Delay_us(uint32_t udelay)
 {
-    int last, curr, val;
-    int temp;
-    while (delay != 0)
+  uint32_t startval,tickn,delays,wait;
+ 
+  startval = SysTick->VAL;
+  tickn = HAL_GetTick();
+  //sysc = 72000;  //SystemCoreClock / (1000U / uwTickFreq);
+  delays =udelay * 168; //sysc / 1000 * udelay;
+  if(delays > startval)
     {
-        temp = delay > 900 ? 900 : delay;
-        last = SysTick->VAL;
-        curr = last - CPU_FREQUENCY_MHZ * temp;
-        if (curr >= 0)
+      while(HAL_GetTick() == tickn)
         {
-            do
-            {
-                val = SysTick->VAL;
-            }
-            while ((val < last) && (val >= curr));
+ 
         }
-        else
+      wait = 168000 + startval - delays;
+      while(wait < SysTick->VAL)
         {
-            curr += CPU_FREQUENCY_MHZ * 1000;
-            do
-            {
-                val = SysTick->VAL;
-            }
-            while ((val <= last) || (val > curr));
+ 
         }
-        delay -= temp;
     }
+  else
+    {
+      wait = startval - delays;
+      while(wait < SysTick->VAL && HAL_GetTick() == tickn)
+        {
+ 
+        }
+    }
+}
+void Delay_ms(uint32_t delay)
+{
+	Delay_us(delay*1000);
 }

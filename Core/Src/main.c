@@ -108,7 +108,7 @@ void Motor_Stop(PID *pid){
   */
 int main(void)
 {
-
+ 
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -172,7 +172,8 @@ int main(void)
   {
     key();
     gray_read(xunji);
-    printf("xunji output:%x,%x,%x,%x,%x,%x,%x,%x",xunji[0],xunji[1],xunji[2],xunji[3],xunji[4],xunji[5],xunji[6],xunji[7]);
+    printf("xunji:%x,%x,%x,%x,%x,%x,%x,%x\r\n",xunji[0],xunji[1],xunji[2],xunji[3],xunji[4],xunji[5],xunji[6],xunji[7]);
+    HAL_Delay(1);
 
     switch (state) {
       case 1:

@@ -5,6 +5,7 @@
 #include "main.h"
 #include "pid.h"
 #include "delay.h"
+#include <stdint.h>
 
 /* External global variables */
 

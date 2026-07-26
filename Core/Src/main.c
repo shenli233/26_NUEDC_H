@@ -63,7 +63,9 @@ float Motor_Cur_Pos2 = 0.0f;
 float Motor_cache_Pos1 = 0.0f;//记录当前电机位置
 float Motor_cache_Pos2 = 0.0f;
 
-uint8_t xunji[8];
+uint8_t gray_buffer[8] = {0};
+float turnspeed;  //turn>0表示左转 error>0小车应该左转
+float turnerror;
 
 uint8_t dir_m1 = 1, dir_m2 = 0;//2的角度为正，1的角度为负
 uint8_t state = 0; //状态机
@@ -116,7 +118,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+   HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -158,8 +160,8 @@ int main(void)
   //初始化PID
   PID_Init(&pid);
 
-  pid.Speed[0]=100;
-  pid.Speed[1]=100;
+  // pid.Speed[0]=100;
+  // pid.Speed[1]=100;
   // state = 1;//是否进入直行掉头的状态机
   // PID_Start(&pid);
 
@@ -171,9 +173,13 @@ int main(void)
   while (1)
   {
     key();
-    gray_read(xunji);
-    printf("xunji:%x,%x,%x,%x,%x,%x,%x,%x\r\n",xunji[0],xunji[1],xunji[2],xunji[3],xunji[4],xunji[5],xunji[6],xunji[7]);
-    HAL_Delay(1);
+    gray_read(gray_buffer);
+    // printf("xunji:%x,%x,%x,%x,%x,%x,%x,%x\r\n",xunji[0],xunji[1],xunji[2],xunji[3],xunji[4],xunji[5],xunji[6],xunji[7]);
+    turnerror = Error_Calcaulate(gray_buffer);
+    turnspeed = turn(4.5f, turnerror);
+    Emm_V5_Vel_Control_1(dir_m1, 100 + turnspeed, 50, 0);
+    Emm_V5_Vel_Control_2(dir_m2, 100 - turnspeed, 50, 0);
+    HAL_Delay(10);
 
     switch (state) {
       case 1:

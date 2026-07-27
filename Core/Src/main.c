@@ -64,6 +64,10 @@ float Motor_cache_Pos1 = 0.0f;//记录当前电机位置
 float Motor_cache_Pos2 = 0.0f;
 
 uint8_t gray_buffer[8] = {0};
+float turnerror_now = 0.0f;
+float turnerror_past = 0.0f;
+float alpha = 0.5;
+
 float turnspeed;  //turn>0表示左转 error>0小车应该左转
 float turnerror;
 float vel_1;
@@ -176,8 +180,12 @@ int main(void)
   {
     key();
     gray_read(gray_buffer);
-    // printf("xunji:%x,%x,%x,%x,%x,%x,%x,%x\r\n",xunji[0],xunji[1],xunji[2],xunji[3],xunji[4],xunji[5],xunji[6],xunji[7]);
-    turnerror = Error_Calcaulate(gray_buffer);
+    turnerror_now = Error_Calcaulate(gray_buffer);
+    if (turnerror_past != 0){
+      turnerror = alpha * turnerror_now + (1.0f - alpha) * turnerror_past;
+    }
+    turnerror_past = turnerror_now;
+    
     turnspeed = turn(4.5f, turnerror);
     vel_1 = 40 + turnspeed;
     vel_2 = 40 - turnspeed;

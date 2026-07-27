@@ -66,6 +66,8 @@ float Motor_cache_Pos2 = 0.0f;
 uint8_t gray_buffer[8] = {0};
 float turnspeed;  //turn>0表示左转 error>0小车应该左转
 float turnerror;
+float vel_1;
+float vel_2;
 
 uint8_t dir_m1 = 1, dir_m2 = 0;//2的角度为正，1的角度为负
 uint8_t state = 0; //状态机
@@ -177,12 +179,20 @@ int main(void)
     // printf("xunji:%x,%x,%x,%x,%x,%x,%x,%x\r\n",xunji[0],xunji[1],xunji[2],xunji[3],xunji[4],xunji[5],xunji[6],xunji[7]);
     turnerror = Error_Calcaulate(gray_buffer);
     turnspeed = turn(4.5f, turnerror);
-    Emm_V5_Vel_Control_1(dir_m1, 100 + turnspeed, 50, 0);
-    Emm_V5_Vel_Control_2(dir_m2, 100 - turnspeed, 50, 0);
+    vel_1 = 40 + turnspeed;
+    vel_2 = 40 - turnspeed;
+    if (vel_2 < 0){
+      dir_m2 = 1;
+      vel_2 = -vel_2;
+    } else {
+      dir_m2 = 0;
+    }
+    Emm_V5_Vel_Control_1(dir_m1, vel_1, 50, 0);
+    Emm_V5_Vel_Control_2(dir_m2, vel_2, 50, 0);
     HAL_Delay(10);
 
     switch (state) {
-      case 1:
+      case 1:    
         //电机1的角度为负，电机2的角度为正)
         if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 80.0f) && pid.flag == 1){
           PID_Stop(&pid);

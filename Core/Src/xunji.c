@@ -2,7 +2,6 @@
 #include "delay.h"
 #include "stm32f4xx_hal.h"
 
-float errorint=0;
 volatile float last_error=4.5;
 void key(){
     if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12) == GPIO_PIN_SET){
@@ -36,7 +35,7 @@ float Error_Calcaulate(uint8_t gray_buffer[])
 			}
    }
  //0表示黑带 1表示白色 active_count==8表示全白 没有黑带  active_count==0 表示全是黑带
-  if (active_count == 8) {
+  if (active_count == 0) {
        //全是白色 没有检测到黑带
         value = last_error;  // 或设置为默认值，如 4.5f
     } else {
@@ -48,9 +47,9 @@ float Error_Calcaulate(uint8_t gray_buffer[])
 
 int turn(float target,float now)
 {
-   static float kp =10.0f;
-   static float ki = 1.0f;
-   static float kd = 0.0f;
+   static float kp = 20.0f;
+   static float ki = 0.0f;
+   static float kd = 500.0f;
    static float pre_err = 0.0f;
    static float errorint = 0.0f;
    float speed;
@@ -59,6 +58,9 @@ int turn(float target,float now)
    errorint += error;
    speed = kp*error + ki*errorint + kd*(error-pre_err);
    pre_err =  error;
+
+   if (speed > 100.0f)  speed = 100.0f;
+   if (speed < -100.0f) speed = -100.0f;
 
    return speed;
 }

@@ -17,12 +17,10 @@ void PID_Init(PID* pid){
 }
 
 void PID_Start(PID *pid){
-  //HAL_TIM_Base_Start_IT(&htim2);
   pid->flag = 1;
 }
 
 void PID_Stop(PID *pid){
-  //HAL_TIM_Base_Stop_IT(&htim2);
   pid->flag = 0;
 }
 

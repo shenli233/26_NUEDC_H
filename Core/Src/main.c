@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dma.h"
-#include "stm32f4xx_hal.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -86,6 +85,7 @@ uint8_t raw_data[11];
 short roll_raw, pitch_raw, yaw_raw;
 float roll, pitch, yaw;
 uint8_t rxData[11];
+uint8_t command[50];
 
 PID pid;
 /* USER CODE END PV */
@@ -150,28 +150,30 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM2_Init();
   MX_UART5_Init();
+  MX_UART4_Init();
   /* USER CODE BEGIN 2 */
   HAL_Delay(3000);
-  //两个电机开始发送位置数据（uart5对应地址1，uart2对应地址2）
+  //两个电机开始发送位置数据（uart2对应地址1，uart4对应地址2）
   Emm_V5_Auto_Return_Sys_Params_Timed_2(2, S_CPOS, 10);
   Emm_V5_Auto_Return_Sys_Params_Timed_1(1, S_CPOS, 10);
   HAL_Delay(100);
   //开始接收两个电机的位置数据
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rxCmd2, sizeof(rxCmd2));
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rxCmd2, sizeof(rxCmd2));
+  __HAL_DMA_DISABLE_IT(huart4.hdmarx, DMA_IT_HT);
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rxCmd1, sizeof(rxCmd1));
   __HAL_DMA_DISABLE_IT(huart2.hdmarx, DMA_IT_HT);
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart5, rxCmd1, sizeof(rxCmd1));
-  __HAL_DMA_DISABLE_IT(huart5.hdmarx, DMA_IT_HT);
   //开始接收IMU数据
   HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxData, sizeof(rxData));
   __HAL_DMA_DISABLE_IT(huart3.hdmarx, DMA_IT_HT);
+  //开始接收串口屏数据
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart5, command, sizeof(command));
+  __HAL_DMA_DISABLE_IT(huart5.hdmarx, DMA_IT_HT);
   //调试正常启动标志
   printf("System Start OK!\r\n");
   // HAL_TIM_Base_Start_IT(&htim2);
 
   // //初始化PID
   // PID_Init(&pid);
-
-  state = 3;//进入状态机
 
   /* USER CODE END 2 */
 
@@ -208,16 +210,46 @@ int main(void)
         HAL_Delay(10);
         break;
       case 2:
-        Motor_cache_Pos1 = Motor_Cur_Pos1;
-        Motor_cache_Pos2 = Motor_Cur_Pos2;
-        pid.Speed[0]=50;
-        pid.Speed[1]=50;
-        pid.Target_Yaw = 0.0f;
-        PID_Start(&pid);
-        if((Motor_cache_Pos1 - Motor_Cur_Pos1 + Motor_Cur_Pos2 - Motor_cache_Pos2)/2.0f >= (2686.0f - 120.0f)){
-          PID_Stop(&pid);
-          Motor_Stop(&pid);
-          state = 0;
+        if (flag1 == 0){
+          Emm_V5_Vel_Control_1(dir_m1, 100, 40, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 100, 40, 0);
+          flag1 = 1;
+        }
+        if (flag1 == 1 && flag2 == 0){
+          if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 120.0f - 161.1f)){
+          Emm_V5_Vel_Control_1(dir_m1, 78, 40, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 122, 40, 0);
+          flag2 = 1;
+          }
+        }
+        if (flag1 == 1 && flag2 == 1 && flag3 == 0){
+          if(Motor_Cur_Pos2 >= (6117.0f - 120.0f - 161.1f)){
+          Motor_cache_Pos1 = Motor_Cur_Pos1;
+          Motor_cache_Pos2 = Motor_Cur_Pos2;
+          Emm_V5_Vel_Control_1(dir_m1, 100, 40, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 100, 40, 0);
+          flag3 = 1;
+          }
+        }
+        if (flag1 == 1 && flag2 == 1 && flag3 == 1 && flag4 == 0) {
+          if (Motor_Cur_Pos2 >= (8802.7f - 280.0f - 161.1f)) {
+            Emm_V5_Vel_Control_1(dir_m1, 78, 40, 0);
+            Emm_V5_Vel_Control_2(dir_m2, 122, 40, 0);
+            flag4 = 1;
+          }
+        }
+        if (flag1 == 1 && flag2 == 1 && flag3 == 1 && flag4 == 1 && flag5 == 0) {
+          if (Motor_Cur_Pos2 >= (12234.0f - 280.0f -72.0f)) {
+            Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
+            Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
+            flag5 = 1;
+            state = 0;
+            flag1 = 0;
+            flag2 = 0;
+            flag3 = 0;
+            flag4 = 0;
+            flag5 = 0;
+          }
         }
         break;
       case 3:
@@ -254,22 +286,36 @@ int main(void)
             Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
             Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
             flag5 = 1;
+            state = 0;
+            flag1 = 0;
+            flag2 = 0;
+            flag3 = 0;
+            flag4 = 0;
+            flag5 = 0;
           }
         }
         break;
       case 4:
-        dir_m1 = 0;
-        if(flag2 == 0){
-            Emm_V5_Vel_Control_1(dir_m1, 50, 50, 0);
-            Emm_V5_Vel_Control_2(dir_m2, 50, 50, 0);
-            flag2 = 1;
+        if (flag1 == 0){
+          Emm_V5_Vel_Control_1(dir_m1, 100, 40, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 100, 40, 0);
+          flag1 = 1;
         }
-        if(yaw >= -1.0f && yaw <= 1.0f){
-          Motor_Stop(&pid);
-          HAL_Delay(500);
+        if (flag1 == 1 && flag2 == 0){
+          if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 120.0f - 161.1f)){
+          Emm_V5_Vel_Control_1(dir_m1, 78, 40, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 122, 40, 0);
+          flag2 = 1;
+          }
+        }
+        if (flag1 == 1 && flag2 == 1 && flag3 == 0){
+          if(Motor_Cur_Pos2 >= (6117.0f - 120.0f - 161.1f)){
           Motor_cache_Pos1 = Motor_Cur_Pos1;
           Motor_cache_Pos2 = Motor_Cur_Pos2;
-          state = 5;
+          Emm_V5_Vel_Control_1(dir_m1, 100, 40, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 100, 40, 0);
+          flag3 = 1;
+          }
         }
         break;
       case 5:
@@ -341,7 +387,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
-  if (huart == &huart2) {
+  if (huart == &huart4) {
     if(rxCmd2[0] == 2 && rxCmd2[1] == 0x36 && Size == 8){
     // 拼接成uint32_t类型
       pos2 = (uint32_t)(
@@ -355,11 +401,11 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 
       // printf("Motor2: %.2f degrees\r\n", Motor_Cur_Pos2);
     }
-    HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rxCmd2, sizeof(rxCmd2));
-    __HAL_DMA_DISABLE_IT(huart2.hdmarx, DMA_IT_HT);
+    HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rxCmd2, sizeof(rxCmd2));
+    __HAL_DMA_DISABLE_IT(huart4.hdmarx, DMA_IT_HT);
   }
 
-  if (huart == &huart5) {
+  if (huart == &huart2) {
     if(rxCmd1[0] == 1 && rxCmd1[1] == 0x36 && Size == 8){
     // 拼接成uint32_t类型
       pos1 = (uint32_t)(
@@ -373,8 +419,8 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 
       // printf("Motor1: %.2f degrees\r\n", Motor_Cur_Pos1);
     }
-    HAL_UARTEx_ReceiveToIdle_DMA(&huart5, rxCmd1, sizeof(rxCmd1));
-    __HAL_DMA_DISABLE_IT(huart5.hdmarx, DMA_IT_HT);
+    HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rxCmd1, sizeof(rxCmd1));
+    __HAL_DMA_DISABLE_IT(huart2.hdmarx, DMA_IT_HT);
   }
 
   if (huart == &huart3) {
@@ -392,6 +438,30 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 		}
 		HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxData, sizeof(rxData));
     __HAL_DMA_DISABLE_IT(huart3.hdmarx, DMA_IT_HT);
+  }
+
+  if (huart == &huart5) {
+    printf("command: %x,%x\r\n",command[0],command[1]);
+    if(command[0] == 0xaa) {
+      switch (command[1]) {
+        case 0x02:
+          state = 2;
+          break;
+        case 0x04:
+          state = 4;
+          break;
+        case 0x05:
+          state = 5;
+          break;
+        case 0x06:
+          state = 5;
+          break;
+        default:
+          break;
+      }
+		}
+		HAL_UARTEx_ReceiveToIdle_DMA(&huart5, command, sizeof(command));
+    __HAL_DMA_DISABLE_IT(huart5.hdmarx, DMA_IT_HT);
   }
 }
 /* USER CODE END 4 */

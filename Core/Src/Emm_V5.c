@@ -191,7 +191,7 @@ void Emm_V5_Vel_Control_1(uint8_t dir, uint16_t vel, uint8_t acc, bool snF)
   cmd[7] =  0x6B;                       // У���ֽ�
   
   // ��������
-  HAL_UART_Transmit_DMA(&huart5, (uint8_t *)cmd, 8);
+  HAL_UART_Transmit_DMA(&huart2, (uint8_t *)cmd, 8);
 }
 
 void Emm_V5_Vel_Control_2(uint8_t dir, uint16_t vel, uint8_t acc, bool snF)
@@ -209,7 +209,7 @@ void Emm_V5_Vel_Control_2(uint8_t dir, uint16_t vel, uint8_t acc, bool snF)
   cmd[7] =  0x6B;                       // У���ֽ�
   
   // ��������
-  HAL_UART_Transmit_DMA(&huart2, (uint8_t *)cmd, 8);
+  HAL_UART_Transmit_DMA(&huart4, (uint8_t *)cmd, 8);
 }
 
 /**
@@ -314,7 +314,7 @@ void Emm_V5_Stop_Now_1(bool snF)
   cmd[4] =  0x6B;                       // У���ֽ�
   
   // ��������
-  HAL_UART_Transmit_DMA(&huart5, (uint8_t *)cmd, 5);
+  HAL_UART_Transmit_DMA(&huart2, (uint8_t *)cmd, 5);
   
 }
 
@@ -330,7 +330,7 @@ void Emm_V5_Stop_Now_2(bool snF)
   cmd[4] =  0x6B;                       // У���ֽ�
   
   // ��������
-  HAL_UART_Transmit_DMA(&huart2, (uint8_t *)cmd, 5);
+  HAL_UART_Transmit_DMA(&huart4, (uint8_t *)cmd, 5);
   
 }
 
@@ -572,7 +572,7 @@ void Emm_V5_Auto_Return_Sys_Params_Timed_2(uint8_t addr, SysParams_t s, uint16_t
   cmd[i] = 0x6B; ++i;                   	// У���ֽ�
   
   // ��������
-  HAL_UART_Transmit_DMA(&huart2, (uint8_t *)cmd, i);
+  HAL_UART_Transmit_DMA(&huart4, (uint8_t *)cmd, i);
 }
 
 void Emm_V5_Auto_Return_Sys_Params_Timed_1(uint8_t addr, SysParams_t s, uint16_t time_ms)
@@ -615,7 +615,7 @@ void Emm_V5_Auto_Return_Sys_Params_Timed_1(uint8_t addr, SysParams_t s, uint16_t
   cmd[i] = 0x6B; ++i;                   	// У���ֽ�
   
   // ��������
-  HAL_UART_Transmit_DMA(&huart5, (uint8_t *)cmd, i);
+  HAL_UART_Transmit_DMA(&huart2, (uint8_t *)cmd, i);
 }
 
 /**

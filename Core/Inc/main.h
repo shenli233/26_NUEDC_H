@@ -61,8 +61,6 @@ void Error_Handler(void);
 #define XJ_CLK_GPIO_Port GPIOD
 #define XJ_DAT_Pin GPIO_PIN_11
 #define XJ_DAT_GPIO_Port GPIOD
-#define XJ_KEY_Pin GPIO_PIN_13
-#define XJ_KEY_GPIO_Port GPIOD
 
 /* USER CODE BEGIN Private defines */
 

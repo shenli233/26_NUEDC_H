@@ -3,11 +3,6 @@
 #include "stm32f4xx_hal.h"
 
 volatile float last_error=4.5;
-void key(){
-    if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12) == GPIO_PIN_SET){
-        HAL_GPIO_WritePin(XJ_KEY_GPIO_Port, XJ_KEY_Pin, GPIO_PIN_RESET);
-    }
-}
 
 void gray_read(uint8_t a[])
 {

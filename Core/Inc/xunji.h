@@ -11,7 +11,6 @@
 
 
 /* Function prototypes */
-void key();
 void gray_read(uint8_t a[]);
 float Error_Calcaulate(uint8_t gray_buffer[]);
 int turn(float target,float now);

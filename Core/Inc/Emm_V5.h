@@ -57,7 +57,8 @@ void Emm_V5_Trig_Encoder_Cal(uint8_t addr);
 // ���������Y42��
 void Emm_V5_Reset_Motor(uint8_t addr);
 // ����ǰλ������
-void Emm_V5_Reset_CurPos_To_Zero(uint8_t addr);
+void Emm_V5_Reset_CurPos_To_Zero_1(void);
+void Emm_V5_Reset_CurPos_To_Zero_2(void);
 // �����ת����
 void Emm_V5_Reset_Clog_Pro(uint8_t addr);
 // �ָ���������

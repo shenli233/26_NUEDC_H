@@ -183,7 +183,7 @@ int main(void)
   while (1)
   {
     switch (state) {
-      case 1:    
+      case 1:
         gray_read(gray_buffer);
         if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (10996.5f - 120.0f - 286.5f)){
           state = 0;
@@ -242,6 +242,7 @@ int main(void)
           if (Motor_Cur_Pos2 >= (12234.0f - 280.0f -72.0f)) {
             Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
             Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
+            HAL_Delay(10);  // 等停止指令发送完成
             flag5 = 1;
             state = 0;
             flag1 = 0;
@@ -249,19 +250,53 @@ int main(void)
             flag3 = 0;
             flag4 = 0;
             flag5 = 0;
+            Emm_V5_Reset_CurPos_To_Zero_1();
+            Emm_V5_Reset_CurPos_To_Zero_2();
+            HAL_Delay(20);  // 等清零指令执行并收到新的位置数据
           }
         }
         break;
       case 3:
+        break;
+      case 4:
         if (flag1 == 0){
-          Emm_V5_Vel_Control_1(dir_m1, 100, 40, 0);
-          Emm_V5_Vel_Control_2(dir_m2, 100, 40, 0);
+          Emm_V5_Vel_Control_1(dir_m1, 65, 10, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 65, 10, 0);
+          flag1 = 1;
+        }
+        if (flag1 == 1 && flag2 == 0){
+          if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 161.1f)){
+          Emm_V5_Vel_Control_1(dir_m1, 43, 10, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 87, 10, 0);
+          flag2 = 1;
+          }
+        }
+        if (flag1 == 1 && flag2 == 1 && flag3 == 0){
+          if(Motor_Cur_Pos2 >= (3500.0f - 120.0f - 161.1f)){
+          Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
+          Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
+          HAL_Delay(10);  // 等停止指令发送完成
+          flag3 = 1;
+          state = 0;
+          flag1 = 0;
+          flag2 = 0;
+          flag3 = 0;
+          Emm_V5_Reset_CurPos_To_Zero_1();
+          Emm_V5_Reset_CurPos_To_Zero_2();
+          HAL_Delay(20);  // 等清零指令执行并收到新的位置数据
+          }
+        }
+        break;
+      case 5:
+        if (flag1 == 0){
+          Emm_V5_Vel_Control_1(dir_m1, 70, 40, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 70, 40, 0);
           flag1 = 1;
         }
         if (flag1 == 1 && flag2 == 0){
           if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 120.0f - 161.1f)){
-          Emm_V5_Vel_Control_1(dir_m1, 78, 40, 0);
-          Emm_V5_Vel_Control_2(dir_m2, 122, 40, 0);
+          Emm_V5_Vel_Control_1(dir_m1, 48, 40, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 92, 40, 0);
           flag2 = 1;
           }
         }
@@ -269,15 +304,15 @@ int main(void)
           if(Motor_Cur_Pos2 >= (6117.0f - 120.0f - 161.1f)){
           Motor_cache_Pos1 = Motor_Cur_Pos1;
           Motor_cache_Pos2 = Motor_Cur_Pos2;
-          Emm_V5_Vel_Control_1(dir_m1, 100, 40, 0);
-          Emm_V5_Vel_Control_2(dir_m2, 100, 40, 0);
+          Emm_V5_Vel_Control_1(dir_m1, 70, 40, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 70, 40, 0);
           flag3 = 1;
           }
         }
         if (flag1 == 1 && flag2 == 1 && flag3 == 1 && flag4 == 0) {
           if (Motor_Cur_Pos2 >= (8802.7f - 280.0f - 161.1f)) {
-            Emm_V5_Vel_Control_1(dir_m1, 78, 40, 0);
-            Emm_V5_Vel_Control_2(dir_m2, 122, 40, 0);
+            Emm_V5_Vel_Control_1(dir_m1, 48, 40, 0);
+            Emm_V5_Vel_Control_2(dir_m2, 92, 40, 0);
             flag4 = 1;
           }
         }
@@ -285,6 +320,7 @@ int main(void)
           if (Motor_Cur_Pos2 >= (12234.0f - 280.0f -72.0f)) {
             Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
             Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
+            HAL_Delay(10);  // 等停止指令发送完成
             flag5 = 1;
             state = 0;
             flag1 = 0;
@@ -292,33 +328,11 @@ int main(void)
             flag3 = 0;
             flag4 = 0;
             flag5 = 0;
+            Emm_V5_Reset_CurPos_To_Zero_1();
+            Emm_V5_Reset_CurPos_To_Zero_2();
+            HAL_Delay(20);  // 等清零指令执行并收到新的位置数据
           }
         }
-        break;
-      case 4:
-        if (flag1 == 0){
-          Emm_V5_Vel_Control_1(dir_m1, 100, 40, 0);
-          Emm_V5_Vel_Control_2(dir_m2, 100, 40, 0);
-          flag1 = 1;
-        }
-        if (flag1 == 1 && flag2 == 0){
-          if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 120.0f - 161.1f)){
-          Emm_V5_Vel_Control_1(dir_m1, 78, 40, 0);
-          Emm_V5_Vel_Control_2(dir_m2, 122, 40, 0);
-          flag2 = 1;
-          }
-        }
-        if (flag1 == 1 && flag2 == 1 && flag3 == 0){
-          if(Motor_Cur_Pos2 >= (6117.0f - 120.0f - 161.1f)){
-          Motor_cache_Pos1 = Motor_Cur_Pos1;
-          Motor_cache_Pos2 = Motor_Cur_Pos2;
-          Emm_V5_Vel_Control_1(dir_m1, 100, 40, 0);
-          Emm_V5_Vel_Control_2(dir_m2, 100, 40, 0);
-          flag3 = 1;
-          }
-        }
-        break;
-      case 5:
         break;
       default:
         break;

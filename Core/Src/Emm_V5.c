@@ -57,12 +57,12 @@ void Emm_V5_Reset_Motor(uint8_t addr)
   * @param    addr  ��������?
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
-void Emm_V5_Reset_CurPos_To_Zero(uint8_t addr)
+void Emm_V5_Reset_CurPos_To_Zero_1()
 {
   __IO static uint8_t cmd[16] = {0};
   
   // װ������
-  cmd[0] =  addr;                       // ��ַ
+  cmd[0] =  0x01;                       // ��ַ
   cmd[1] =  0x0A;                       // ������
   cmd[2] =  0x6D;                       // ������
   cmd[3] =  0x6B;                       // У���ֽ�
@@ -71,8 +71,22 @@ void Emm_V5_Reset_CurPos_To_Zero(uint8_t addr)
 	HAL_UART_Transmit_DMA(&huart2, (uint8_t *)cmd, 4);
 }
 
+void Emm_V5_Reset_CurPos_To_Zero_2()
+{
+  __IO static uint8_t cmd[16] = {0};
+  
+  // װ������
+  cmd[0] =  0x02;                       // ��ַ
+  cmd[1] =  0x0A;                       // ������
+  cmd[2] =  0x6D;                       // ������
+  cmd[3] =  0x6B;                       // У���ֽ�
+  
+  // ��������
+	HAL_UART_Transmit_DMA(&huart4, (uint8_t *)cmd, 4);
+}
+
 /**
-  * @brief    �����ת����?
+  * @brief    �����ת����??
   * @param    addr  ��������?
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
@@ -124,7 +138,7 @@ void Emm_V5_Multi_Motor_Cmd(uint8_t addr)
 	// ��������ȴ���0
 	if(MMCL_count > 0)
 	{
-		// ������������ֽ���?
+		// ������������ֽ���??
 		len = MMCL_count + 5;
 		
 		// װ������
@@ -147,7 +161,7 @@ void Emm_V5_Multi_Motor_Cmd(uint8_t addr)
 /**
   * @brief    ʹ���źſ���
   * @param    addr  ��������?
-  * @param    state ��ʹ��״̬     ��trueΪʹ�ܵ����falseΪ�رյ��?
+  * @param    state ��ʹ��״̬     ��trueΪʹ�ܵ����falseΪ�رյ��??
   * @param    snF   �����ͬ�����? ��falseΪ�����ã�trueΪ����
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
@@ -219,7 +233,7 @@ void Emm_V5_Vel_Control_2(uint8_t dir, uint16_t vel, uint8_t acc, bool snF)
   * @param    vel ���ٶ�(RPM)   ����Χ0 - 5000RPM
   * @param    acc �����ٶ�      ����Χ0 - 255��ע�⣺0��ֱ������
   * @param    clk ��������      ����Χ0- (2^32 - 1)��
-  * @param    raF ���˶���־��0Ϊ�����һ����Ŀ��λ�ý������λ���˶���1Ϊ����ֵ�˶���2��Ե�ǰ���ʵʱλ�ý������λ���˶�?
+  * @param    raF ���˶���־��0Ϊ�����һ����Ŀ��λ�ý������λ���˶���1Ϊ����ֵ�˶���2��Ե�ǰ���ʵʱλ�ý������λ���˶�??
   * @param    snF �����ͬ�����? ��falseΪ�����ã�trueΪ����
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
@@ -251,7 +265,7 @@ void Emm_V5_Pos_Control(uint8_t addr, uint8_t dir, uint16_t vel, uint8_t acc, ui
   * @param    addr��������?
   * @param    vel ���ٶ�(RPM)   ����Χ0 - 5000RPM
   * @param    acc �����ٶ�      ����Χ0 - 255��ע�⣺0��ֱ������
-  * @param    raF ���˶���־��0Ϊ�����һ����Ŀ��λ�ý������λ���˶���1Ϊ����ֵ�˶���2��Ե�ǰ���ʵʱλ�ý������λ���˶�?
+  * @param    raF ���˶���־��0Ϊ�����һ����Ŀ��λ�ý������λ���˶���1Ϊ����ֵ�˶���2��Ե�ǰ���ʵʱλ�ý������λ���˶�??
   * @param    snF �����ͬ�����? ��falseΪ�����ã�trueΪ����
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
@@ -335,7 +349,7 @@ void Emm_V5_Stop_Now_2(bool snF)
 }
 
 /**
-  * @brief    ���ͬ���˶�?
+  * @brief    ���ͬ���˶�??
   * @param    addr  ��������?
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
@@ -354,7 +368,7 @@ void Emm_V5_Synchronous_motion(uint8_t addr)
 }
 
 /**********************************************************
-*** ԭ���������?
+*** ԭ���������??
 **********************************************************/
 /**
   * @brief    ���õ�Ȧ��������λ��
@@ -380,7 +394,7 @@ void Emm_V5_Origin_Set_O(uint8_t addr, bool svF)
 /**
   * @brief    ��������
   * @param    addr   ��������?
-  * @param    o_mode ������ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������?2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
+  * @param    o_mode ������ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������??2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
   * @param    snF   �����ͬ����־��falseΪ�����ã�trueΪ����
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
@@ -391,7 +405,7 @@ void Emm_V5_Origin_Trigger_Return(uint8_t addr, uint8_t o_mode, bool snF)
   // װ������
   cmd[0] =  addr;                       // ��ַ
   cmd[1] =  0x9A;                       // ������
-  cmd[2] =  o_mode;                     // ����ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������?2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
+  cmd[2] =  o_mode;                     // ����ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������??2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
   cmd[3] =  snF;                        // ���ͬ���˶���־��falseΪ�����ã�trueΪ����
   cmd[4] =  0x6B;                       // У���ֽ�
   
@@ -419,7 +433,7 @@ void Emm_V5_Origin_Interrupt(uint8_t addr)
 }
 
 /**
-  * @brief    ��ȡ�������?
+  * @brief    ��ȡ�������??
   * @param    addr     ��������?
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
@@ -437,10 +451,10 @@ void Emm_V5_Origin_Read_Params(uint8_t addr)
 }
 
 /**
-  * @brief    �޸Ļ������?
+  * @brief    �޸Ļ������??
   * @param    addr  ��������?
   * @param    svF   ���Ƿ�洢��־��falseΪ���洢��trueΪ�洢
-  * @param    o_mode ������ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������?2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
+  * @param    o_mode ������ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������??2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
   * @param    o_dir  �����㷽��0ΪCW������ֵΪCCW
   * @param    o_vel  �������ٶȣ���λ��RPM��ת/���ӣ�
   * @param    o_tm   �����㳬ʱʱ�䣬��λ������
@@ -459,7 +473,7 @@ void Emm_V5_Origin_Modify_Params(uint8_t addr, bool svF, uint8_t o_mode, uint8_t
   cmd[1] =  0x4C;                       // ������
   cmd[2] =  0xAE;                       // ������
   cmd[3] =  svF;                        // �Ƿ�洢��־��falseΪ���洢��trueΪ�洢
-  cmd[4] =  o_mode;                     // ����ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������?2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
+  cmd[4] =  o_mode;                     // ����ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������??2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
   cmd[5] =  o_dir;                      // ���㷽��
   cmd[6]  =  (uint8_t)(o_vel >> 8);     // �����ٶ�(RPM)��8λ�ֽ�
   cmd[7]  =  (uint8_t)(o_vel >> 0);     // �����ٶ�(RPM)��8λ�ֽ� 
@@ -469,8 +483,8 @@ void Emm_V5_Origin_Modify_Params(uint8_t addr, bool svF, uint8_t o_mode, uint8_t
   cmd[11] =  (uint8_t)(o_tm >> 0);      // ���㳬ʱʱ��(bit0  - bit7 )
   cmd[12] =  (uint8_t)(sl_vel >> 8);    // ����λ��ײ������ת��(RPM)��8λ�ֽ�
   cmd[13] =  (uint8_t)(sl_vel >> 0);    // ����λ��ײ������ת��(RPM)��8λ�ֽ� 
-  cmd[14] =  (uint8_t)(sl_ma >> 8);     // ����λ��ײ���������?(Ma)��8λ�ֽ�
-  cmd[15] =  (uint8_t)(sl_ma >> 0);     // ����λ��ײ���������?(Ma)��8λ�ֽ� 
+  cmd[14] =  (uint8_t)(sl_ma >> 8);     // ����λ��ײ���������??(Ma)��8λ�ֽ�
+  cmd[15] =  (uint8_t)(sl_ma >> 0);     // ����λ��ײ���������??(Ma)��8λ�ֽ� 
   cmd[16] =  (uint8_t)(sl_ms >> 8);     // ����λ��ײ������ʱ��(Ms)��8λ�ֽ�
   cmd[17] =  (uint8_t)(sl_ms >> 0);     // ����λ��ײ������ʱ��(Ms)��8λ�ֽ�
   cmd[18] =  potF;                      // �ϵ��Զ��������㣬falseΪ��ʹ�ܣ�trueΪʹ��
@@ -547,15 +561,15 @@ void Emm_V5_Auto_Return_Sys_Params_Timed_2(uint8_t addr, SysParams_t s, uint16_t
   {
     case S_VBUS : cmd[i] = 0x24; ++i; break;	// ��ȡ���ߵ�ѹ
 		case S_CBUS : cmd[i] = 0x26; ++i; break;	// ��ȡ���ߵ���
-    case S_CPHA : cmd[i] = 0x27; ++i; break;	// ��ȡ�����?
+    case S_CPHA : cmd[i] = 0x27; ++i; break;	// ��ȡ�����??
 		case S_ENCO : cmd[i] = 0x29; ++i; break;	// ��ȡ������ԭʼֵ
 		case S_CLKC : cmd[i] = 0x30; ++i; break;	// ��ȡʵʱ������
     case S_ENCL : cmd[i] = 0x31; ++i; break;	// ��ȡ�������Ի�У׼��ı������?
 		case S_CLKI : cmd[i] = 0x32; ++i; break;	// ��ȡ����������
-    case S_TPOS : cmd[i] = 0x33; ++i; break;	// ��ȡ���Ŀ��λ��?
-    case S_SPOS : cmd[i] = 0x34; ++i; break;	// ��ȡ���ʵʱ�趨��Ŀ��λ��?
-		case S_VEL  : cmd[i] = 0x35; ++i; break;	// ��ȡ���ʵʱת��?
-    case S_CPOS : cmd[i] = 0x36; ++i; break;	// ��ȡ���ʵʱλ��?
+    case S_TPOS : cmd[i] = 0x33; ++i; break;	// ��ȡ���Ŀ��λ��??
+    case S_SPOS : cmd[i] = 0x34; ++i; break;	// ��ȡ���ʵʱ�趨��Ŀ��λ��??
+		case S_VEL  : cmd[i] = 0x35; ++i; break;	// ��ȡ���ʵʱת��??
+    case S_CPOS : cmd[i] = 0x36; ++i; break;	// ��ȡ���ʵʱλ��??
     case S_PERR : cmd[i] = 0x37; ++i; break;	// ��ȡ���λ�����
 		case S_VBAT : cmd[i] = 0x38; ++i; break;	// ��ȡ��Ȧ��������ص�ѹ��Y42��
 		case S_TEMP : cmd[i] = 0x39; ++i; break;	// ��ȡ���ʵʱ�¶ȣ�Y42��
@@ -590,15 +604,15 @@ void Emm_V5_Auto_Return_Sys_Params_Timed_1(uint8_t addr, SysParams_t s, uint16_t
   {
     case S_VBUS : cmd[i] = 0x24; ++i; break;	// ��ȡ���ߵ�ѹ
 		case S_CBUS : cmd[i] = 0x26; ++i; break;	// ��ȡ���ߵ���
-    case S_CPHA : cmd[i] = 0x27; ++i; break;	// ��ȡ�����?
+    case S_CPHA : cmd[i] = 0x27; ++i; break;	// ��ȡ�����??
 		case S_ENCO : cmd[i] = 0x29; ++i; break;	// ��ȡ������ԭʼֵ
 		case S_CLKC : cmd[i] = 0x30; ++i; break;	// ��ȡʵʱ������
     case S_ENCL : cmd[i] = 0x31; ++i; break;	// ��ȡ�������Ի�У׼��ı������?
 		case S_CLKI : cmd[i] = 0x32; ++i; break;	// ��ȡ����������
-    case S_TPOS : cmd[i] = 0x33; ++i; break;	// ��ȡ���Ŀ��λ��?
-    case S_SPOS : cmd[i] = 0x34; ++i; break;	// ��ȡ���ʵʱ�趨��Ŀ��λ��?
-		case S_VEL  : cmd[i] = 0x35; ++i; break;	// ��ȡ���ʵʱת��?
-    case S_CPOS : cmd[i] = 0x36; ++i; break;	// ��ȡ���ʵʱλ��?
+    case S_TPOS : cmd[i] = 0x33; ++i; break;	// ��ȡ���Ŀ��λ��??
+    case S_SPOS : cmd[i] = 0x34; ++i; break;	// ��ȡ���ʵʱ�趨��Ŀ��λ��??
+		case S_VEL  : cmd[i] = 0x35; ++i; break;	// ��ȡ���ʵʱת��??
+    case S_CPOS : cmd[i] = 0x36; ++i; break;	// ��ȡ���ʵʱλ��??
     case S_PERR : cmd[i] = 0x37; ++i; break;	// ��ȡ���λ�����
 		case S_VBAT : cmd[i] = 0x38; ++i; break;	// ��ȡ��Ȧ��������ص�ѹ��Y42��
 		case S_TEMP : cmd[i] = 0x39; ++i; break;	// ��ȡ���ʵʱ�¶ȣ�Y42��
@@ -635,15 +649,15 @@ void Emm_V5_Read_Sys_Params(uint8_t addr, SysParams_t s)
   {
     case S_VBUS : cmd[i] = 0x24; ++i; break;	// ��ȡ���ߵ�ѹ
 		case S_CBUS : cmd[i] = 0x26; ++i; break;	// ��ȡ���ߵ���
-    case S_CPHA : cmd[i] = 0x27; ++i; break;	// ��ȡ�����?
+    case S_CPHA : cmd[i] = 0x27; ++i; break;	// ��ȡ�����??
 		case S_ENCO : cmd[i] = 0x29; ++i; break;	// ��ȡ������ԭʼֵ
 		case S_CLKC : cmd[i] = 0x30; ++i; break;	// ��ȡʵʱ������
     case S_ENCL : cmd[i] = 0x31; ++i; break;	// ��ȡ�������Ի�У׼��ı������?
 		case S_CLKI : cmd[i] = 0x32; ++i; break;	// ��ȡ����������
-    case S_TPOS : cmd[i] = 0x33; ++i; break;	// ��ȡ���Ŀ��λ��?
-    case S_SPOS : cmd[i] = 0x34; ++i; break;	// ��ȡ���ʵʱ�趨��Ŀ��λ��?
-		case S_VEL  : cmd[i] = 0x35; ++i; break;	// ��ȡ���ʵʱת��?
-    case S_CPOS : cmd[i] = 0x36; ++i; break;	// ��ȡ���ʵʱλ��?
+    case S_TPOS : cmd[i] = 0x33; ++i; break;	// ��ȡ���Ŀ��λ��??
+    case S_SPOS : cmd[i] = 0x34; ++i; break;	// ��ȡ���ʵʱ�趨��Ŀ��λ��??
+		case S_VEL  : cmd[i] = 0x35; ++i; break;	// ��ȡ���ʵʱת��??
+    case S_CPOS : cmd[i] = 0x36; ++i; break;	// ��ȡ���ʵʱλ��??
     case S_PERR : cmd[i] = 0x37; ++i; break;	// ��ȡ���λ�����
 		case S_VBAT : cmd[i] = 0x38; ++i; break;	// ��ȡ��Ȧ��������ص�ѹ��Y42��
 		case S_TEMP : cmd[i] = 0x39; ++i; break;	// ��ȡ���ʵʱ�¶ȣ�Y42��
@@ -751,7 +765,7 @@ void Emm_V5_Read_Opt_Param_Sta(uint8_t addr)
   * @brief    �޸ĵ�����ͣ�Y42��
   * @param    addr     ��������?
   * @param    svF      ���Ƿ�洢��־��falseΪ���洢��trueΪ�洢
-  * @param    mottype	 ��������ͣ�Ĭ���?0��0��ʾ1.8�㲽�������?1��ʾ0.9�㲽�����?
+  * @param    mottype	 ��������ͣ�Ĭ���?0��0��ʾ1.8�㲽�������??1��ʾ0.9�㲽�����??
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
 void Emm_V5_Modify_Motor_Type(uint8_t addr, bool svF, bool mottype)
@@ -765,7 +779,7 @@ void Emm_V5_Modify_Motor_Type(uint8_t addr, bool svF, bool mottype)
   cmd[1] =  0xD7;                       // ������
   cmd[2] =  0x35;                       // ������
   cmd[3] =  svF;                        // �Ƿ�洢��־��falseΪ���洢��trueΪ�洢
-  cmd[4] =  MotType;                 	 	// ������ͣ�?0��ʾ0.9�㲽�������?1��ʾ1.8�㲽�����?
+  cmd[4] =  MotType;                 	 	// ������ͣ�??0��ʾ0.9�㲽�������??1��ʾ1.8�㲽�����??
   cmd[5] =  0x6B;                       // У���ֽ�
   
   // ��������
@@ -788,7 +802,7 @@ void Emm_V5_Modify_Firmware_Type(uint8_t addr, bool svF, bool fwtype)
   cmd[1] =  0xD5;                       // ������
   cmd[2] =  0x69;                       // ������
   cmd[3] =  svF;                        // �Ƿ�洢��־��falseΪ���洢��trueΪ�洢
-  cmd[4] =  fwtype;                 	 	// ������ͣ�?25��ʾ0.9�㲽�������?50��ʾ1.8�㲽�����?
+  cmd[4] =  fwtype;                 	 	// ������ͣ�??25��ʾ0.9�㲽�������??50��ʾ1.8�㲽�����??
   cmd[5] =  0x6B;                       // У���ֽ�
   
   // ��������
@@ -1014,9 +1028,9 @@ void Emm_V5_Read_DMX512_Params(uint8_t addr)
   * @param    svF   		���Ƿ�洢��־��falseΪ���洢��trueΪ�洢
   * @param    tch				����ͨ������Ĭ��Ϊ192����ֵҪ������ DMX512 ����������ͨ����һ��
 	* @param    nch				��ÿ�����ռ�õ�ͨ������Ĭ���?1��1Ϊ��ͨ��ģʽ,2Ϊ˫ͨ��ģʽ
-	* @param    mode			���˶�ģʽ��Ĭ��Ϊ1��0��ʾ���λ��ģʽ�˶���?1��ʾ��������ʽλ���˶�
+	* @param    mode			���˶�ģʽ��Ĭ��Ϊ1��0��ʾ���λ��ģʽ�˶���??1��ʾ��������ʽλ���˶�
 	* @param    vel				����ͨ��ģʽ���˶��ٶȣ�Ĭ��ֵΪ1000�� ��λRPM�� ��1000RPM��
-	* @param    acc				�����ٶȣ�acc=������ֵ/8=125������ʱ���˵����?5.3.12 λ��ģʽ���ƣ�Emm����
+	* @param    acc				�����ٶȣ�acc=������ֵ/8=125������ʱ���˵����??5.3.12 λ��ģʽ���ƣ�Emm����
 	* @param    vel_step	��˫ͨ��ģʽ�ٶȲ�����Ĭ��ֵΪ 10�� ������˶��ٶ��?(ͨ��ֵ * 10)RPM
 	* @param    pos_step	��˫ͨ��ģʽ�˶�������Ĭ��ֵΪ 100�� �����ת���Ƕ��?(ͨ��ֵ * 10.0)��
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
@@ -1032,7 +1046,7 @@ void Emm_V5_Modify_DMX512_Params(uint8_t addr, bool svF, uint16_t tch, uint8_t n
   cmd[3]  =  svF;                       // �Ƿ�洢��־��falseΪ���洢��trueΪ�洢
   cmd[4]  =  (uint8_t)(tch >> 8);     	// ��ͨ����
   cmd[5]  =  (uint8_t)(tch >> 0);
-	cmd[6]  =  nch;                       // ÿ�����ռ�õ�ͨ����?
+	cmd[6]  =  nch;                       // ÿ�����ռ�õ�ͨ����??
 	cmd[7]  =  mode;                      // �˶�ģʽ
 	cmd[8]  =  (uint8_t)(vel >> 8);     	// ��ͨ��ģʽ���˶��ٶ�
   cmd[9]  =  (uint8_t)(vel >> 0);
@@ -1114,9 +1128,9 @@ void Emm_V5_Read_Otocp(uint8_t addr)
   * @brief    �޸Ĺ��ȹ������������ֵ��Y42��
   * @param    addr     ��������?
   * @param    svF      ���Ƿ�洢��־��falseΪ���洢��trueΪ�洢
-  * @param    otp 	 	 �����ȱ��������ֵ��Ĭ��?100��
-	* @param    ocp 	 	 ���������������ֵ��Ĭ��?6600mA
-	* @param    time_ms  �����ȹ������ʱ�䣬Ĭ��?1000ms
+  * @param    otp 	 	 �����ȱ��������ֵ��Ĭ��??100��
+	* @param    ocp 	 	 ���������������ֵ��Ĭ��??6600mA
+	* @param    time_ms  �����ȹ������ʱ�䣬Ĭ��??1000ms
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
 void Emm_V5_Modify_Otocp(uint8_t addr, bool svF, uint16_t otp, uint16_t ocp, uint16_t time_ms)
@@ -1132,7 +1146,7 @@ void Emm_V5_Modify_Otocp(uint8_t addr, bool svF, uint16_t otp, uint16_t ocp, uin
 	cmd[5]  =  (uint8_t)(otp >> 0);
 	cmd[6]  =  (uint8_t)(ocp >> 8);				// ��������������?
 	cmd[7]  =  (uint8_t)(ocp >> 0);
-	cmd[8]  =  (uint8_t)(time_ms >> 8);		// ���ȹ������ʱ��?
+	cmd[8]  =  (uint8_t)(time_ms >> 8);		// ���ȹ������ʱ��??
 	cmd[9]  =  (uint8_t)(time_ms >> 0);
   cmd[10] =  0x6B;                      // У���ֽ�
   
@@ -1343,7 +1357,7 @@ void Emm_V5_MMCL_Reset_CurPos_To_Zero(uint8_t addr)
 }
 
 /**
-  * @brief    �����ת����? - ���ص�����ָ����
+  * @brief    �����ת����?? - ���ص�����ָ����
   * @param    addr  ��������?
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
@@ -1386,7 +1400,7 @@ void Emm_V5_MMCL_Restore_Motor(uint8_t addr)
 /**
   * @brief    ʹ���źſ��� - ���ص�����ָ����
   * @param    addr  ��������?
-  * @param    state ��ʹ��״̬     ��trueΪʹ�ܵ����falseΪ�رյ��?
+  * @param    state ��ʹ��״̬     ��trueΪʹ�ܵ����falseΪ�رյ��??
   * @param    snF   �����ͬ�����? ��falseΪ�����ã�trueΪ����
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
@@ -1440,7 +1454,7 @@ void Emm_V5_MMCL_Vel_Control(uint8_t addr, uint8_t dir, uint16_t vel, uint8_t ac
   * @param    vel ���ٶ�(RPM)   ����Χ0 - 5000RPM
   * @param    acc �����ٶ�      ����Χ0 - 255��ע�⣺0��ֱ������
   * @param    clk ��������      ����Χ0- (2^32 - 1)��
-  * @param    raF ���˶���־��0Ϊ�����һ����Ŀ��λ�ý������λ���˶���1Ϊ����ֵ�˶���2��Ե�ǰ���ʵʱλ�ý������λ���˶�?
+  * @param    raF ���˶���־��0Ϊ�����һ����Ŀ��λ�ý������λ���˶���1Ϊ����ֵ�˶���2��Ե�ǰ���ʵʱλ�ý������λ���˶�??
   * @param    snF �����ͬ�����? ��falseΪ�����ã�trueΪ����
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
@@ -1472,7 +1486,7 @@ void Emm_V5_MMCL_Pos_Control(uint8_t addr, uint8_t dir, uint16_t vel, uint8_t ac
   * @param    addr��������?
   * @param    vel ���ٶ�(RPM)   ����Χ0 - 5000RPM
   * @param    acc �����ٶ�      ����Χ0 - 255��ע�⣺0��ֱ������
-  * @param    raF ���˶���־��0Ϊ�����һ����Ŀ��λ�ý������λ���˶���1Ϊ����ֵ�˶���2��Ե�ǰ���ʵʱλ�ý������λ���˶�?
+  * @param    raF ���˶���־��0Ϊ�����һ����Ŀ��λ�ý������λ���˶���1Ϊ����ֵ�˶���2��Ե�ǰ���ʵʱλ�ý������λ���˶�??
   * @param    snF �����ͬ�����? ��falseΪ�����ã�trueΪ����
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
@@ -1539,7 +1553,7 @@ void Emm_V5_MMCL_Stop_Now(uint8_t addr, bool snF)
 }
 
 /**
-  * @brief    ���ͬ���˶�? - ���ص�����ָ����
+  * @brief    ���ͬ���˶�?? - ���ص�����ָ����
   * @param    addr  ��������?
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
@@ -1558,7 +1572,7 @@ void Emm_V5_MMCL_Synchronous_motion(uint8_t addr)
 }
 
 /**********************************************************
-*** ԭ���������?
+*** ԭ���������??
 **********************************************************/
 /**
   * @brief    ���õ�Ȧ��������λ�� - ���ص�����ָ����
@@ -1584,7 +1598,7 @@ void Emm_V5_MMCL_Origin_Set_O(uint8_t addr, bool svF)
 /**
   * @brief    �������� - ���ص�����ָ����
   * @param    addr   ��������?
-  * @param    o_mode ������ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������?2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
+  * @param    o_mode ������ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������??2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
   * @param    snF   �����ͬ����־��falseΪ�����ã�trueΪ����
   * @retval   ��ַ + ������ + ����״̬ + У���ֽ�
   */
@@ -1595,7 +1609,7 @@ void Emm_V5_MMCL_Origin_Trigger_Return(uint8_t addr, uint8_t o_mode, bool snF)
   // װ������
   cmd[0] =  addr;                       // ��ַ
   cmd[1] =  0x9A;                       // ������
-  cmd[2] =  o_mode;                     // ����ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������?2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
+  cmd[2] =  o_mode;                     // ����ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������??2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
   cmd[3] =  snF;                        // ���ͬ���˶���־��falseΪ�����ã�trueΪ����
   cmd[4] =  0x6B;                       // У���ֽ�
   
@@ -1623,10 +1637,10 @@ void Emm_V5_MMCL_Origin_Interrupt(uint8_t addr)
 }
 
 /**
-  * @brief    �޸Ļ������? - ���ص�����ָ����
+  * @brief    �޸Ļ������?? - ���ص�����ָ����
   * @param    addr  ��������?
   * @param    svF   ���Ƿ�洢��־��falseΪ���洢��trueΪ�洢
-  * @param    o_mode ������ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������?2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
+  * @param    o_mode ������ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������??2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
   * @param    o_dir  �����㷽��0ΪCW������ֵΪCCW
   * @param    o_vel  �������ٶȣ���λ��RPM��ת/���ӣ�
   * @param    o_tm   �����㳬ʱʱ�䣬��λ������
@@ -1645,7 +1659,7 @@ void Emm_V5_MMCL_Origin_Modify_Params(uint8_t addr, bool svF, uint8_t o_mode, ui
   cmd[1] =  0x4C;                       // ������
   cmd[2] =  0xAE;                       // ������
   cmd[3] =  svF;                        // �Ƿ�洢��־��falseΪ���洢��trueΪ�洢
-  cmd[4] =  o_mode;                     // ����ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������?2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
+  cmd[4] =  o_mode;                     // ����ģʽ��0Ϊ��Ȧ�ͽ����㣬1Ϊ��Ȧ�������??2Ϊ��Ȧ����λ��ײ���㣬3Ϊ��Ȧ����λ���ػ���
   cmd[5] =  o_dir;                      // ���㷽��
   cmd[6]  =  (uint8_t)(o_vel >> 8);     // �����ٶ�(RPM)��8λ�ֽ�
   cmd[7]  =  (uint8_t)(o_vel >> 0);     // �����ٶ�(RPM)��8λ�ֽ� 
@@ -1655,8 +1669,8 @@ void Emm_V5_MMCL_Origin_Modify_Params(uint8_t addr, bool svF, uint8_t o_mode, ui
   cmd[11] =  (uint8_t)(o_tm >> 0);      // ���㳬ʱʱ��(bit0  - bit7 )
   cmd[12] =  (uint8_t)(sl_vel >> 8);    // ����λ��ײ������ת��(RPM)��8λ�ֽ�
   cmd[13] =  (uint8_t)(sl_vel >> 0);    // ����λ��ײ������ת��(RPM)��8λ�ֽ� 
-  cmd[14] =  (uint8_t)(sl_ma >> 8);     // ����λ��ײ���������?(Ma)��8λ�ֽ�
-  cmd[15] =  (uint8_t)(sl_ma >> 0);     // ����λ��ײ���������?(Ma)��8λ�ֽ� 
+  cmd[14] =  (uint8_t)(sl_ma >> 8);     // ����λ��ײ���������??(Ma)��8λ�ֽ�
+  cmd[15] =  (uint8_t)(sl_ma >> 0);     // ����λ��ײ���������??(Ma)��8λ�ֽ� 
   cmd[16] =  (uint8_t)(sl_ms >> 8);     // ����λ��ײ������ʱ��(Ms)��8λ�ֽ�
   cmd[17] =  (uint8_t)(sl_ms >> 0);     // ����λ��ײ������ʱ��(Ms)��8λ�ֽ�
   cmd[18] =  potF;                      // �ϵ��Զ��������㣬falseΪ��ʹ�ܣ�trueΪʹ��
@@ -1736,15 +1750,15 @@ void Emm_V5_MMCL_Auto_Return_Sys_Params_Timed(uint8_t addr, SysParams_t s, uint1
   {
     case S_VBUS : cmd[i] = 0x24; ++i; break;	// ��ȡ���ߵ�ѹ
 		case S_CBUS : cmd[i] = 0x26; ++i; break;	// ��ȡ���ߵ���
-    case S_CPHA : cmd[i] = 0x27; ++i; break;	// ��ȡ�����?
+    case S_CPHA : cmd[i] = 0x27; ++i; break;	// ��ȡ�����??
 		case S_ENCO : cmd[i] = 0x29; ++i; break;	// ��ȡ������ԭʼֵ
 		case S_CLKC : cmd[i] = 0x30; ++i; break;	// ��ȡʵʱ������
     case S_ENCL : cmd[i] = 0x31; ++i; break;	// ��ȡ�������Ի�У׼��ı������?
 		case S_CLKI : cmd[i] = 0x32; ++i; break;	// ��ȡ����������
-    case S_TPOS : cmd[i] = 0x33; ++i; break;	// ��ȡ���Ŀ��λ��?
-    case S_SPOS : cmd[i] = 0x34; ++i; break;	// ��ȡ���ʵʱ�趨��Ŀ��λ��?
-		case S_VEL  : cmd[i] = 0x35; ++i; break;	// ��ȡ���ʵʱת��?
-    case S_CPOS : cmd[i] = 0x36; ++i; break;	// ��ȡ���ʵʱλ��?
+    case S_TPOS : cmd[i] = 0x33; ++i; break;	// ��ȡ���Ŀ��λ��??
+    case S_SPOS : cmd[i] = 0x34; ++i; break;	// ��ȡ���ʵʱ�趨��Ŀ��λ��??
+		case S_VEL  : cmd[i] = 0x35; ++i; break;	// ��ȡ���ʵʱת��??
+    case S_CPOS : cmd[i] = 0x36; ++i; break;	// ��ȡ���ʵʱλ��??
     case S_PERR : cmd[i] = 0x37; ++i; break;	// ��ȡ���λ�����
 		case S_VBAT : cmd[i] = 0x38; ++i; break;	// ��ȡ��Ȧ��������ص�ѹ��Y42��
 		case S_TEMP : cmd[i] = 0x39; ++i; break;	// ��ȡ���ʵʱ�¶ȣ�Y42��
@@ -1781,15 +1795,15 @@ void Emm_V5_MMCL_Read_Sys_Params(uint8_t addr, SysParams_t s)
   {
     case S_VBUS : cmd[i] = 0x24; ++i; break;	// ��ȡ���ߵ�ѹ
 		case S_CBUS : cmd[i] = 0x26; ++i; break;	// ��ȡ���ߵ���
-    case S_CPHA : cmd[i] = 0x27; ++i; break;	// ��ȡ�����?
+    case S_CPHA : cmd[i] = 0x27; ++i; break;	// ��ȡ�����??
 		case S_ENCO : cmd[i] = 0x29; ++i; break;	// ��ȡ������ԭʼֵ
 		case S_CLKC : cmd[i] = 0x30; ++i; break;	// ��ȡʵʱ������
     case S_ENCL : cmd[i] = 0x31; ++i; break;	// ��ȡ�������Ի�У׼��ı������?
 		case S_CLKI : cmd[i] = 0x32; ++i; break;	// ��ȡ����������
-    case S_TPOS : cmd[i] = 0x33; ++i; break;	// ��ȡ���Ŀ��λ��?
-    case S_SPOS : cmd[i] = 0x34; ++i; break;	// ��ȡ���ʵʱ�趨��Ŀ��λ��?
-		case S_VEL  : cmd[i] = 0x35; ++i; break;	// ��ȡ���ʵʱת��?
-    case S_CPOS : cmd[i] = 0x36; ++i; break;	// ��ȡ���ʵʱλ��?
+    case S_TPOS : cmd[i] = 0x33; ++i; break;	// ��ȡ���Ŀ��λ��??
+    case S_SPOS : cmd[i] = 0x34; ++i; break;	// ��ȡ���ʵʱ�趨��Ŀ��λ��??
+		case S_VEL  : cmd[i] = 0x35; ++i; break;	// ��ȡ���ʵʱת��??
+    case S_CPOS : cmd[i] = 0x36; ++i; break;	// ��ȡ���ʵʱλ��??
     case S_PERR : cmd[i] = 0x37; ++i; break;	// ��ȡ���λ�����
 		case S_VBAT : cmd[i] = 0x38; ++i; break;	// ��ȡ��Ȧ��������ص�ѹ��Y42��
 		case S_TEMP : cmd[i] = 0x39; ++i; break;	// ��ȡ���ʵʱ�¶ȣ�Y42��

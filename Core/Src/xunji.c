@@ -47,7 +47,7 @@ float Error_Calcaulate(uint8_t gray_buffer[])
 
 int turn(float target,float now)
 {
-   static float kp = 18.0f;
+   static float kp = 11.0f;
    static float ki = 0.0f;
    static float kd = 0.0f;
    static float pre_err = 0.0f;
@@ -59,8 +59,8 @@ int turn(float target,float now)
    speed = kp*error + ki*errorint + kd*(error-pre_err);
    pre_err =  error;
 
-   if (speed > 100.0f)  speed = 100.0f;
-   if (speed < -100.0f) speed = -100.0f;
+   if (speed > 90.0f)  speed = 90.0f;
+   if (speed < -90.0f) speed = -90.0f;
 
    return speed;
 }

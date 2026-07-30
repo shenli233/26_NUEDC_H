@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dma.h"
+#include "stm32f4xx_hal.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -75,7 +76,7 @@ float vel_2;
 
 uint8_t dir_m1 = 1, dir_m2 = 0;//2的角度为正，1的角度为负
 uint8_t state = 0; //状态机
-uint8_t flag2 = 0;
+uint8_t flag = 0;
 
 uint8_t raw_data[11];
 short roll_raw, pitch_raw, yaw_raw;
@@ -116,7 +117,7 @@ void Motor_Stop(PID *pid){
   */
 int main(void)
 {
- 
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -124,7 +125,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-   HAL_Init();
+  HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -161,10 +162,10 @@ int main(void)
   __HAL_DMA_DISABLE_IT(huart3.hdmarx, DMA_IT_HT);
   //调试正常启动标志
   printf("System Start OK!\r\n");
-  HAL_TIM_Base_Start_IT(&htim2);
+  // HAL_TIM_Base_Start_IT(&htim2);
 
-  //初始化PID
-  PID_Init(&pid);
+  // //初始化PID
+  // PID_Init(&pid);
 
   // pid.Speed[0]=100;
   // pid.Speed[1]=100;
@@ -178,98 +179,103 @@ int main(void)
   
   while (1)
   {
-    key();
-    gray_read(gray_buffer);
-    turnerror_now = Error_Calcaulate(gray_buffer);
-    if (turnerror_past != 0){
-      turnerror = alpha * turnerror_now + (1.0f - alpha) * turnerror_past;
-    }
-    turnerror_past = turnerror_now;
+    if(flag == 0){
+      gray_read(gray_buffer);
+      if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (10996.5f - 120.0f - 286.5f)){
+        flag = 1;
+        Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
+        Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
+      }
+      turnerror_now = Error_Calcaulate(gray_buffer);
+      if (turnerror_past != 0){
+        turnerror = alpha * turnerror_now + (1.0f - alpha) * turnerror_past;
+      }
+      turnerror_past = turnerror_now;
     
-    turnspeed = turn(4.5f, turnerror);
-    vel_1 = 40 + turnspeed;
-    vel_2 = 40 - turnspeed;
-    if (vel_2 < 0){
-      dir_m2 = 1;
-      vel_2 = -vel_2;
-    } else {
-      dir_m2 = 0;
+      turnspeed = turn(4.5f, turnerror);
+      vel_1 = 100 + turnspeed;
+      vel_2 = 100 - turnspeed;
+      if (vel_2 < 0){
+        dir_m2 = 1;
+        vel_2 = -vel_2;
+      } else {
+        dir_m2 = 0;
+      }
+      Emm_V5_Vel_Control_1(dir_m1, vel_1, 40, 0);
+      Emm_V5_Vel_Control_2(dir_m2, vel_2, 40, 0);
+      HAL_Delay(10);
     }
-    Emm_V5_Vel_Control_1(dir_m1, vel_1, 50, 0);
-    Emm_V5_Vel_Control_2(dir_m2, vel_2, 50, 0);
-    HAL_Delay(10);
-
-    switch (state) {
-      case 1:    
-        //电机1的角度为负，电机2的角度为正)
-        if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 80.0f) && pid.flag == 1){
-          PID_Stop(&pid);
-          Motor_Stop(&pid);
-          HAL_Delay(500);
-          state = 2;
-        }
-        break;
-      case 2:
-        dir_m1 = 0;
-        if(flag2 == 0){
-            Emm_V5_Vel_Control_1(dir_m1, 50, 50, 0);
-            Emm_V5_Vel_Control_2(dir_m2, 50, 50, 0);
-            flag2 = 1;
-        }
-        if(yaw >= 179.0f || yaw <= -179.0f){
-          Motor_Stop(&pid);
-          HAL_Delay(500);
-          Motor_cache_Pos1 = Motor_Cur_Pos1;
-          Motor_cache_Pos2 = Motor_Cur_Pos2;
-          state = 3;
-        }
-        break;
-      case 3:
-        dir_m1 = 1;
-        pid.Speed[0]=100;
-        pid.Speed[1]=100;
-        pid.Target_Yaw = 180.0f;
-        flag2 = 0;
-        PID_Start(&pid);
-        if((Motor_cache_Pos1 - Motor_Cur_Pos1 + Motor_Cur_Pos2 - Motor_cache_Pos2)/2.0f >= (2686.0f - 80.0f) && pid.flag == 1){
-          PID_Stop(&pid);
-          Motor_Stop(&pid);
-          HAL_Delay(500);
-          state = 4;
-        }
-        break;
-      case 4:
-        dir_m1 = 0;
-        if(flag2 == 0){
-            Emm_V5_Vel_Control_1(dir_m1, 50, 50, 0);
-            Emm_V5_Vel_Control_2(dir_m2, 50, 50, 0);
-            flag2 = 1;
-        }
-        if(yaw >= -1.0f && yaw <= 1.0f){
-          Motor_Stop(&pid);
-          HAL_Delay(500);
-          Motor_cache_Pos1 = Motor_Cur_Pos1;
-          Motor_cache_Pos2 = Motor_Cur_Pos2;
-          state = 5;
-        }
-        break;
-      case 5:
-        dir_m1 = 1;
-        pid.Speed[0]=100;
-        pid.Speed[1]=100;
-        pid.Target_Yaw = 0.0f;
-        flag2 = 0;
-        PID_Start(&pid);
-        if((Motor_cache_Pos1 - Motor_Cur_Pos1 + Motor_Cur_Pos2 - Motor_cache_Pos2)/2.0f >= (2686.0f - 80.0f) && pid.flag == 1){
-          PID_Stop(&pid);
-          Motor_Stop(&pid);
-          HAL_Delay(500);
-          state = 2;
-        }
-        break;
-      default:
-        break;
-    }
+    // switch (state) {
+    //   case 1:    
+    //     //电机1的角度为负，电机2的角度为正)
+    //     if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 80.0f) && pid.flag == 1){
+    //       PID_Stop(&pid);
+    //       Motor_Stop(&pid);
+    //       HAL_Delay(500);
+    //       state = 2;
+    //     }
+    //     break;
+    //   case 2:
+    //     dir_m1 = 0;
+    //     if(flag2 == 0){
+    //         Emm_V5_Vel_Control_1(dir_m1, 50, 50, 0);
+    //         Emm_V5_Vel_Control_2(dir_m2, 50, 50, 0);
+    //         flag2 = 1;
+    //     }
+    //     if(yaw >= 179.0f || yaw <= -179.0f){
+    //       Motor_Stop(&pid);
+    //       HAL_Delay(500);
+    //       Motor_cache_Pos1 = Motor_Cur_Pos1;
+    //       Motor_cache_Pos2 = Motor_Cur_Pos2;
+    //       state = 3;
+    //     }
+    //     break;
+    //   case 3:
+    //     dir_m1 = 1;
+    //     pid.Speed[0]=100;
+    //     pid.Speed[1]=100;
+    //     pid.Target_Yaw = 180.0f;
+    //     flag2 = 0;
+    //     PID_Start(&pid);
+    //     if((Motor_cache_Pos1 - Motor_Cur_Pos1 + Motor_Cur_Pos2 - Motor_cache_Pos2)/2.0f >= (2686.0f - 80.0f) && pid.flag == 1){
+    //       PID_Stop(&pid);
+    //       Motor_Stop(&pid);
+    //       HAL_Delay(500);
+    //       state = 4;
+    //     }
+    //     break;
+    //   case 4:
+    //     dir_m1 = 0;
+    //     if(flag2 == 0){
+    //         Emm_V5_Vel_Control_1(dir_m1, 50, 50, 0);
+    //         Emm_V5_Vel_Control_2(dir_m2, 50, 50, 0);
+    //         flag2 = 1;
+    //     }
+    //     if(yaw >= -1.0f && yaw <= 1.0f){
+    //       Motor_Stop(&pid);
+    //       HAL_Delay(500);
+    //       Motor_cache_Pos1 = Motor_Cur_Pos1;
+    //       Motor_cache_Pos2 = Motor_Cur_Pos2;
+    //       state = 5;
+    //     }
+    //     break;
+    //   case 5:
+    //     dir_m1 = 1;
+    //     pid.Speed[0]=100;
+    //     pid.Speed[1]=100;
+    //     pid.Target_Yaw = 0.0f;
+    //     flag2 = 0;
+    //     PID_Start(&pid);
+    //     if((Motor_cache_Pos1 - Motor_Cur_Pos1 + Motor_Cur_Pos2 - Motor_cache_Pos2)/2.0f >= (2686.0f - 80.0f) && pid.flag == 1){
+    //       PID_Stop(&pid);
+    //       Motor_Stop(&pid);
+    //       HAL_Delay(500);
+    //       state = 2;
+    //     }
+    //     break;
+    //   default:
+    //     break;
+    // }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

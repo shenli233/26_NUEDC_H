@@ -77,7 +77,7 @@ float vel_1;
 float vel_2;
 
 uint8_t dir_m1 = 1, dir_m2 = 0;//2的角度为正，1的角度为负
-uint8_t state = 0; //状态机
+volatile uint8_t state = 0; //状态机
 uint8_t flag1 = 0;
 uint8_t flag2 = 0;
 uint8_t flag3 = 0;
@@ -89,12 +89,14 @@ short roll_raw, pitch_raw, yaw_raw;
 float roll, pitch, yaw;
 uint8_t rxData[11];
 uint8_t command[50];
+char text[10];
 
 uint32_t now_ticks;
 volatile uint32_t      start_tick  = 0;            /* 计时开始时刻 (ms)  */
 volatile uint32_t      stop_tick   = 0;            /* 计时停止时刻 (ms)  */
 static uint8_t         display_dirty = 1;
-uint8_t flag_time = 0;
+volatile uint8_t flag_time = 0;
+volatile uint8_t cancel_request = 0;
 
 PID pid;
 /* USER CODE END PV */
@@ -214,6 +216,20 @@ int main(void)
       }
     }
 
+    if (cancel_request){
+      state = 0;
+      cancel_request = 0;
+      flag_time = 0;
+      flag1 = 0;
+      flag2 = 0;
+      flag3 = 0;
+      flag4 = 0;
+      flag5 = 0;
+      OLED_NewFrame();
+      draw_ready_screen();
+      OLED_ShowFrame();
+    }
+
     switch (state) {
       case 0:
         break;
@@ -299,6 +315,8 @@ int main(void)
         }
         break;
       case 3:
+        HAL_UART_Transmit_DMA(&huart6, (uint8_t *)text, sizeof(text));
+        state = 0;
         break;
       case 4:
         if (flag1 == 0){
@@ -508,11 +526,13 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
   }
 
   if (huart == &huart5) {
-    printf("command: %x,%x\r\n",command[0],command[1]);
     if(command[0] == 0xaa) {
       switch (command[1]) {
         case 0x02:
           state = 2;
+          break;
+        case 0x03:
+          state = 3;
           break;
         case 0x04:
           state = 4;
@@ -524,9 +544,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
           state = 5;
           break;
         case 0x07:
-          OLED_NewFrame();
-          draw_ready_screen();
-          OLED_ShowFrame();
+          cancel_request = 1;
           break;
         default:
           break;

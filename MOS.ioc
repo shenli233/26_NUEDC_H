@@ -152,6 +152,7 @@ NVIC.UART4_IRQn=true\:0\:0\:false\:false\:true\:true\:true\:true
 NVIC.UART5_IRQn=true\:0\:0\:false\:false\:true\:true\:true\:true
 NVIC.USART2_IRQn=true\:0\:0\:false\:false\:true\:true\:true\:true
 NVIC.USART3_IRQn=true\:0\:0\:false\:false\:true\:true\:true\:true
+NVIC.USART6_IRQn=true\:0\:0\:false\:false\:true\:true\:true\:true
 NVIC.UsageFault_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
 PA0-WKUP.Mode=Asynchronous
 PA0-WKUP.Signal=UART4_TX

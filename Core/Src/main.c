@@ -85,11 +85,12 @@ uint8_t flag4 = 0;
 uint8_t flag5 = 0;
 
 uint8_t raw_data[11];
-short roll_raw, pitch_raw, yaw_raw;
-float roll, pitch, yaw;
+short x_raw, y_raw, z_raw;
+float x, y, z;
 uint8_t rxData[11];
 uint8_t command[50];
-char text[10];
+char text[50];
+char text0[50] = "start\r\n";
 
 uint32_t now_ticks;
 volatile uint32_t      start_tick  = 0;            /* 计时开始时刻 (ms)  */
@@ -315,7 +316,9 @@ int main(void)
         }
         break;
       case 3:
-        HAL_UART_Transmit_DMA(&huart6, (uint8_t *)text, sizeof(text));
+        //上位机启动第三项测试
+        printf("1111");
+        HAL_UART_Transmit_DMA(&huart6, (uint8_t *)text0, strlen(text0));
         state = 0;
         break;
       case 4:
@@ -461,15 +464,15 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-  if (htim == &htim2) {
-    if(pid.flag == 1){
-      PID_Run(&pid, yaw);
-      Emm_V5_Vel_Control_1(dir_m1, pid.Real_Speed[1], 50, 0);
-      Emm_V5_Vel_Control_2(dir_m2, pid.Real_Speed[0], 50, 0);
-    }
-  }
-}
+// void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+//   if (htim == &htim2) {
+//     if(pid.flag == 1){
+//       PID_Run(&pid, yaw);
+//       Emm_V5_Vel_Control_1(dir_m1, pid.Real_Speed[1], 50, 0);
+//       Emm_V5_Vel_Control_2(dir_m2, pid.Real_Speed[0], 50, 0);
+//     }
+//   }
+// }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
   if (huart == &huart4) {
@@ -509,23 +512,26 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
   }
 
   if (huart == &huart3) {
-    if(rxData[0] == 0x55 && rxData[1] == 0x53 && rxData[10] == (uint8_t)(rxData[0] + rxData[1] + rxData[2] + rxData[3] + rxData[4] + rxData[5] + rxData[6] + rxData[7] + rxData[8] + rxData[9])) {
+    if(rxData[0] == 0x55 && rxData[1] == 0x51 && rxData[10] == (uint8_t)(rxData[0] + rxData[1] + rxData[2] + rxData[3] + rxData[4] + rxData[5] + rxData[6] + rxData[7] + rxData[8] + rxData[9])) {
 
-			roll_raw  = (short)(rxData[3] << 8 | rxData[2]);
-		  pitch_raw = (short)(rxData[5] << 8 | rxData[4]);
-		  yaw_raw   = (short)(rxData[7] << 8 | rxData[6]);
+			x_raw = (short)(rxData[3] << 8 | rxData[2]);
+		  y_raw = (short)(rxData[5] << 8 | rxData[4]);
+		  z_raw = (short)(rxData[7] << 8 | rxData[6]);
 
-		  roll  = (float)roll_raw  / 32768.0f * 180.0f;
-		  pitch = (float)pitch_raw / 32768.0f * 180.0f;
-		  yaw   = (float)yaw_raw   / 32768.0f * 180.0f;
+		  x = (float)x_raw  / 32768.0f * 156.8f;
+		  y = (float)y_raw / 32768.0f * 156.8f;
+		  z = (float)z_raw   / 32768.0f * 156.8f;
 
-      // printf("yaw: %.2f, Speed0: %.2f, Speed1: %.2f, Angle_Error: %.2f\r\n", yaw, pid.Real_Speed[0], pid.Real_Speed[1], pid.Angle_Error);
+      sprintf(text,"x:%.2f,y:%.2f,z:%.2f",x,y,z);
+      HAL_UART_Transmit_DMA(&huart6, (uint8_t *)text, sizeof(text));
+      // printf("z: %.2f\r\n", z);
 		}
 		HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxData, sizeof(rxData));
     __HAL_DMA_DISABLE_IT(huart3.hdmarx, DMA_IT_HT);
   }
 
   if (huart == &huart5) {
+    printf("command:%x,%x",command[0],command[1]);
     if(command[0] == 0xaa) {
       switch (command[1]) {
         case 0x02:

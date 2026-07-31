@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dma.h"
+#include "i2c.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -33,6 +34,8 @@
 #include "pid.h"
 #include "xunji.h"
 #include "delay.h"
+#include "oled.h"
+#include "time.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -86,6 +89,12 @@ short roll_raw, pitch_raw, yaw_raw;
 float roll, pitch, yaw;
 uint8_t rxData[11];
 uint8_t command[50];
+
+uint32_t now_ticks;
+volatile uint32_t      start_tick  = 0;            /* 计时开始时刻 (ms)  */
+volatile uint32_t      stop_tick   = 0;            /* 计时停止时刻 (ms)  */
+static uint8_t         display_dirty = 1;
+uint8_t flag_time = 0;
 
 PID pid;
 /* USER CODE END PV */
@@ -151,8 +160,16 @@ int main(void)
   MX_TIM2_Init();
   MX_UART5_Init();
   MX_UART4_Init();
+  MX_I2C1_Init();
+  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_Delay(3000);
+  //初始化OLED
+  OLED_Init();
+  OLED_DisPlay_On();
+  OLED_NewFrame();
+  draw_ready_screen();
+  OLED_ShowFrame();
   //两个电机开始发送位置数据（uart2对应地址1，uart4对应地址2）
   Emm_V5_Auto_Return_Sys_Params_Timed_2(2, S_CPOS, 10);
   Emm_V5_Auto_Return_Sys_Params_Timed_1(1, S_CPOS, 10);
@@ -170,6 +187,7 @@ int main(void)
   __HAL_DMA_DISABLE_IT(huart5.hdmarx, DMA_IT_HT);
   //调试正常启动标志
   printf("System Start OK!\r\n");
+
   // HAL_TIM_Base_Start_IT(&htim2);
 
   // //初始化PID
@@ -182,7 +200,23 @@ int main(void)
   
   while (1)
   {
+    now_ticks = HAL_GetTick();
+    if (flag_time == 1){
+      static uint32_t last_draw_tick = 0;
+      uint32_t elapsed = now_ticks - start_tick;
+      /* 每 100ms 刷新显示 (与 0.1s 精度匹配) */
+      if (display_dirty || (elapsed / 100) != (last_draw_tick / 100)){
+        display_dirty = 0;
+        last_draw_tick = elapsed;
+        OLED_NewFrame();
+        draw_running_screen(elapsed);
+        OLED_ShowFrame();
+      }
+    }
+
     switch (state) {
+      case 0:
+        break;
       case 1:
         gray_read(gray_buffer);
         if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (10996.5f - 120.0f - 286.5f)){
@@ -211,6 +245,9 @@ int main(void)
         break;
       case 2:
         if (flag1 == 0){
+          start_tick = now_ticks;
+          flag_time = 1;
+          display_dirty = 1;
           Emm_V5_Vel_Control_1(dir_m1, 100, 40, 0);
           Emm_V5_Vel_Control_2(dir_m2, 100, 40, 0);
           flag1 = 1;
@@ -242,6 +279,11 @@ int main(void)
           if (Motor_Cur_Pos2 >= (12234.0f - 280.0f -72.0f)) {
             Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
             Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
+            stop_tick = now_ticks;
+            flag_time = 0;
+            OLED_NewFrame();
+            draw_stopped_screen(stop_tick - start_tick);
+            OLED_ShowFrame();
             HAL_Delay(10);  // 等停止指令发送完成
             flag5 = 1;
             state = 0;
@@ -289,35 +331,19 @@ int main(void)
         break;
       case 5:
         if (flag1 == 0){
-          Emm_V5_Vel_Control_1(dir_m1, 70, 40, 0);
-          Emm_V5_Vel_Control_2(dir_m2, 70, 40, 0);
+          Emm_V5_Vel_Control_1(dir_m1, 70, 20, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 70, 20, 0);
           flag1 = 1;
         }
         if (flag1 == 1 && flag2 == 0){
-          if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 120.0f - 161.1f)){
-          Emm_V5_Vel_Control_1(dir_m1, 48, 40, 0);
-          Emm_V5_Vel_Control_2(dir_m2, 92, 40, 0);
+          if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 161.1f)){
+          Emm_V5_Vel_Control_1(dir_m1, 55, 20, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 85, 20, 0);
           flag2 = 1;
           }
         }
         if (flag1 == 1 && flag2 == 1 && flag3 == 0){
           if(Motor_Cur_Pos2 >= (6117.0f - 120.0f - 161.1f)){
-          Motor_cache_Pos1 = Motor_Cur_Pos1;
-          Motor_cache_Pos2 = Motor_Cur_Pos2;
-          Emm_V5_Vel_Control_1(dir_m1, 70, 40, 0);
-          Emm_V5_Vel_Control_2(dir_m2, 70, 40, 0);
-          flag3 = 1;
-          }
-        }
-        if (flag1 == 1 && flag2 == 1 && flag3 == 1 && flag4 == 0) {
-          if (Motor_Cur_Pos2 >= (8802.7f - 280.0f - 161.1f)) {
-            Emm_V5_Vel_Control_1(dir_m1, 48, 40, 0);
-            Emm_V5_Vel_Control_2(dir_m2, 92, 40, 0);
-            flag4 = 1;
-          }
-        }
-        if (flag1 == 1 && flag2 == 1 && flag3 == 1 && flag4 == 1 && flag5 == 0) {
-          if (Motor_Cur_Pos2 >= (12234.0f - 280.0f -72.0f)) {
             Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
             Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
             HAL_Delay(10);  // 等停止指令发送完成
@@ -331,8 +357,35 @@ int main(void)
             Emm_V5_Reset_CurPos_To_Zero_1();
             Emm_V5_Reset_CurPos_To_Zero_2();
             HAL_Delay(20);  // 等清零指令执行并收到新的位置数据
+          // Emm_V5_Vel_Control_1(dir_m1, 70, 40, 0);
+          // Emm_V5_Vel_Control_2(dir_m2, 70, 40, 0);
+          // flag3 = 1;
           }
         }
+        // if (flag1 == 1 && flag2 == 1 && flag3 == 1 && flag4 == 0) {
+        //   if (Motor_Cur_Pos2 >= (8802.7f - 280.0f - 161.1f)) {
+        //     Emm_V5_Vel_Control_1(dir_m1, 48, 40, 0);
+        //     Emm_V5_Vel_Control_2(dir_m2, 92, 40, 0);
+        //     flag4 = 1;
+        //   }
+        // }
+        // if (flag1 == 1 && flag2 == 1 && flag3 == 1 && flag4 == 1 && flag5 == 0) {
+        //   if (Motor_Cur_Pos2 >= (12234.0f - 280.0f -72.0f)) {
+        //     Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
+        //     Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
+        //     HAL_Delay(10);  // 等停止指令发送完成
+        //     flag5 = 1;
+        //     state = 0;
+        //     flag1 = 0;
+        //     flag2 = 0;
+        //     flag3 = 0;
+        //     flag4 = 0;
+        //     flag5 = 0;
+        //     Emm_V5_Reset_CurPos_To_Zero_1();
+        //     Emm_V5_Reset_CurPos_To_Zero_2();
+        //     HAL_Delay(20);  // 等清零指令执行并收到新的位置数据
+        //   }
+        // }
         break;
       default:
         break;
@@ -469,6 +522,11 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
           break;
         case 0x06:
           state = 5;
+          break;
+        case 0x07:
+          OLED_NewFrame();
+          draw_ready_screen();
+          OLED_ShowFrame();
           break;
         default:
           break;

@@ -52,6 +52,12 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Inc/xunji.h
     Core/Src/delay.c
     Core/Inc/delay.h
+    Core/Src/oled.c
+    Core/Inc/oled.h
+    Core/Src/font.c
+    Core/Inc/font.h
+    Core/Src/time.c
+    Core/Inc/time.h
 )
 
 # Add include paths

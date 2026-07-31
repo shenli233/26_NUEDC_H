@@ -61,8 +61,8 @@ uint8_t rxCmd1[50];
 uint8_t rxCmd2[50];
 uint32_t pos2 = 0;
 uint32_t pos1 = 0;
-float Motor_Cur_Pos1 = 0.0f;
-float Motor_Cur_Pos2 = 0.0f;
+volatile float Motor_Cur_Pos1 = 0.0f;
+volatile float Motor_Cur_Pos2 = 0.0f;
 float Motor_cache_Pos1 = 0.0f;//记录当前电机位置
 float Motor_cache_Pos2 = 0.0f;
 
@@ -141,7 +141,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+8  HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -270,7 +270,7 @@ int main(void)
           flag1 = 1;
         }
         if (flag1 == 1 && flag2 == 0){
-          if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 120.0f - 161.1f)){
+          if(Motor_Cur_Pos2 >= (2686.0f - 120.0f - 161.1f)){
           Emm_V5_Vel_Control_1(dir_m1, 78, 40, 0);
           Emm_V5_Vel_Control_2(dir_m2, 122, 40, 0);
           flag2 = 1;
@@ -522,8 +522,8 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 		  y = (float)y_raw / 32768.0f * 156.8f;
 		  z = (float)z_raw   / 32768.0f * 156.8f;
 
-      sprintf(text,"x:%.2f,y:%.2f,z:%.2f",x,y,z);
-      HAL_UART_Transmit_DMA(&huart6, (uint8_t *)text, sizeof(text));
+      // sprintf(text,"x:%.2f,y:%.2f,z:%.2f",x,y,z);
+      // HAL_UART_Transmit_DMA(&huart6, (uint8_t *)text, sizeof(text));
       // printf("z: %.2f\r\n", z);
 		}
 		HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxData, sizeof(rxData));

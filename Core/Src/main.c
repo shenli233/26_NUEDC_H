@@ -383,7 +383,7 @@ int main(void)
           }
         }
         if (flag1 == 1 && flag2 == 1 && flag3 == 1 && flag4 == 1 && flag5 == 0) {
-          if (Motor_Cur_Pos2 >= (12234.0f - 350.1f)) {
+          if (Motor_Cur_Pos2 >= (12234.0f - 400.1f)) {
             Emm_V5_Vel_Control_1(dir_m1, 70, 10, 0);
             Emm_V5_Vel_Control_2(dir_m2, 70, 10, 0);
             flag5 = 1;

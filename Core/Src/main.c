@@ -63,8 +63,6 @@ uint32_t pos2 = 0;
 uint32_t pos1 = 0;
 volatile float Motor_Cur_Pos1 = 0.0f;
 volatile float Motor_Cur_Pos2 = 0.0f;
-float Motor_cache_Pos1 = 0.0f;//记录当前电机位置
-float Motor_cache_Pos2 = 0.0f;
 
 uint8_t gray_buffer[8] = {0};
 float turnerror_now = 0.0f;
@@ -141,7 +139,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-8  HAL_Init();
+  HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -191,7 +189,7 @@ int main(void)
   //调试正常启动标志
   printf("System Start OK!\r\n");
 
-  // HAL_TIM_Base_Start_IT(&htim2);
+  HAL_TIM_Base_Start_IT(&htim2);
 
   // //初始化PID
   // PID_Init(&pid);
@@ -278,8 +276,6 @@ int main(void)
         }
         if (flag1 == 1 && flag2 == 1 && flag3 == 0){
           if(Motor_Cur_Pos2 >= (6117.0f - 120.0f - 161.1f)){
-          Motor_cache_Pos1 = Motor_Cur_Pos1;
-          Motor_cache_Pos2 = Motor_Cur_Pos2;
           Emm_V5_Vel_Control_1(dir_m1, 100, 40, 0);
           Emm_V5_Vel_Control_2(dir_m2, 100, 40, 0);
           flag3 = 1;
@@ -293,22 +289,21 @@ int main(void)
           }
         }
         if (flag1 == 1 && flag2 == 1 && flag3 == 1 && flag4 == 1 && flag5 == 0) {
-          if (Motor_Cur_Pos2 >= (12234.0f - 280.0f -72.0f)) {
+          if (Motor_Cur_Pos2 >= (12234.0f - 280.0f -85.0f)) {
             Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
             Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
-            stop_tick = now_ticks;
-            flag_time = 0;
-            OLED_NewFrame();
-            draw_stopped_screen(stop_tick - start_tick);
-            OLED_ShowFrame();
-            HAL_Delay(10);  // 等停止指令发送完成
-            flag5 = 1;
             state = 0;
             flag1 = 0;
             flag2 = 0;
             flag3 = 0;
             flag4 = 0;
             flag5 = 0;
+            stop_tick = now_ticks;
+            flag_time = 0;
+            OLED_NewFrame();
+            draw_stopped_screen(stop_tick - start_tick);
+            OLED_ShowFrame();
+            HAL_Delay(10);  // 等停止指令发送完成
             Emm_V5_Reset_CurPos_To_Zero_1();
             Emm_V5_Reset_CurPos_To_Zero_2();
             HAL_Delay(20);  // 等清零指令执行并收到新的位置数据
@@ -323,14 +318,17 @@ int main(void)
         break;
       case 4:
         if (flag1 == 0){
+          start_tick = now_ticks;
+          flag_time = 1;
+          display_dirty = 1;
           Emm_V5_Vel_Control_1(dir_m1, 65, 10, 0);
           Emm_V5_Vel_Control_2(dir_m2, 65, 10, 0);
           flag1 = 1;
         }
         if (flag1 == 1 && flag2 == 0){
-          if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 161.1f)){
-          Emm_V5_Vel_Control_1(dir_m1, 43, 10, 0);
-          Emm_V5_Vel_Control_2(dir_m2, 87, 10, 0);
+          if(Motor_Cur_Pos2 >= (2686.0f - 161.1f)){
+          Emm_V5_Vel_Control_1(dir_m1, 45, 10, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 85, 10, 0);
           flag2 = 1;
           }
         }
@@ -338,12 +336,16 @@ int main(void)
           if(Motor_Cur_Pos2 >= (3500.0f - 120.0f - 161.1f)){
           Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
           Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
-          HAL_Delay(10);  // 等停止指令发送完成
-          flag3 = 1;
           state = 0;
           flag1 = 0;
           flag2 = 0;
           flag3 = 0;
+          stop_tick = now_ticks;
+          flag_time = 0;
+          OLED_NewFrame();
+          draw_stopped_screen(stop_tick - start_tick);
+          OLED_ShowFrame();
+          HAL_Delay(10);  // 等停止指令发送完成
           Emm_V5_Reset_CurPos_To_Zero_1();
           Emm_V5_Reset_CurPos_To_Zero_2();
           HAL_Delay(20);  // 等清零指令执行并收到新的位置数据
@@ -352,61 +354,62 @@ int main(void)
         break;
       case 5:
         if (flag1 == 0){
-          Emm_V5_Vel_Control_1(dir_m1, 70, 20, 0);
-          Emm_V5_Vel_Control_2(dir_m2, 70, 20, 0);
+          start_tick = now_ticks;
+          flag_time = 1;
+          display_dirty = 1;
+          Emm_V5_Vel_Control_1(dir_m1, 70, 10, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 70, 10, 0);
           flag1 = 1;
         }
         if (flag1 == 1 && flag2 == 0){
-          if((-Motor_Cur_Pos1 + Motor_Cur_Pos2)/2.0f >= (2686.0f - 161.1f)){
-          Emm_V5_Vel_Control_1(dir_m1, 55, 20, 0);
-          Emm_V5_Vel_Control_2(dir_m2, 85, 20, 0);
+          if(Motor_Cur_Pos2 >= (2686.0f - 161.1f)){
+          Emm_V5_Vel_Control_1(dir_m1, 54, 10, 0);
+          Emm_V5_Vel_Control_2(dir_m2, 86, 10, 0);
           flag2 = 1;
           }
         }
         if (flag1 == 1 && flag2 == 1 && flag3 == 0){
-          if(Motor_Cur_Pos2 >= (6117.0f - 120.0f - 161.1f)){
+          if(Motor_Cur_Pos2 >= (6117.0f - 161.1f - 100.0f)){
+            Emm_V5_Vel_Control_1(dir_m1, 70, 10, 0);
+            Emm_V5_Vel_Control_2(dir_m2, 70, 10, 0);
+            flag3 = 1;
+          }
+        }
+        if (flag1 == 1 && flag2 == 1 && flag3 == 1 && flag4 == 0) {
+          if (Motor_Cur_Pos2 >= (8802.7f - 161.1f - 100.0f )) {
+            Emm_V5_Vel_Control_1(dir_m1, 53, 10, 0);
+            Emm_V5_Vel_Control_2(dir_m2, 86, 10, 0);
+            flag4 = 1;
+          }
+        }
+        if (flag1 == 1 && flag2 == 1 && flag3 == 1 && flag4 == 1 && flag5 == 0) {
+          if (Motor_Cur_Pos2 >= (12234.0f - 350.1f)) {
+            Emm_V5_Vel_Control_1(dir_m1, 70, 10, 0);
+            Emm_V5_Vel_Control_2(dir_m2, 70, 10, 0);
+            flag5 = 1;
+          }
+        }
+        if (flag1 ==1 && flag2 == 1 && flag3 == 1 && flag4 == 1 && flag5 == 1){
+          if (Motor_Cur_Pos2 >= (12234.0f + 500.0f)){
             Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
             Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
-            HAL_Delay(10);  // 等停止指令发送完成
-            flag5 = 1;
             state = 0;
             flag1 = 0;
             flag2 = 0;
             flag3 = 0;
             flag4 = 0;
             flag5 = 0;
+            stop_tick = now_ticks;
+            flag_time = 0;
+            OLED_NewFrame();
+            draw_stopped_screen(stop_tick - start_tick);
+            OLED_ShowFrame();
+            HAL_Delay(10);  // 等停止指令发送完成
             Emm_V5_Reset_CurPos_To_Zero_1();
             Emm_V5_Reset_CurPos_To_Zero_2();
             HAL_Delay(20);  // 等清零指令执行并收到新的位置数据
-          // Emm_V5_Vel_Control_1(dir_m1, 70, 40, 0);
-          // Emm_V5_Vel_Control_2(dir_m2, 70, 40, 0);
-          // flag3 = 1;
           }
         }
-        // if (flag1 == 1 && flag2 == 1 && flag3 == 1 && flag4 == 0) {
-        //   if (Motor_Cur_Pos2 >= (8802.7f - 280.0f - 161.1f)) {
-        //     Emm_V5_Vel_Control_1(dir_m1, 48, 40, 0);
-        //     Emm_V5_Vel_Control_2(dir_m2, 92, 40, 0);
-        //     flag4 = 1;
-        //   }
-        // }
-        // if (flag1 == 1 && flag2 == 1 && flag3 == 1 && flag4 == 1 && flag5 == 0) {
-        //   if (Motor_Cur_Pos2 >= (12234.0f - 280.0f -72.0f)) {
-        //     Emm_V5_Stop_Now_1(0); // Immediate stop left wheel with sync flag
-        //     Emm_V5_Stop_Now_2(0); // Immediate stop right wheel with sync flag
-        //     HAL_Delay(10);  // 等停止指令发送完成
-        //     flag5 = 1;
-        //     state = 0;
-        //     flag1 = 0;
-        //     flag2 = 0;
-        //     flag3 = 0;
-        //     flag4 = 0;
-        //     flag5 = 0;
-        //     Emm_V5_Reset_CurPos_To_Zero_1();
-        //     Emm_V5_Reset_CurPos_To_Zero_2();
-        //     HAL_Delay(20);  // 等清零指令执行并收到新的位置数据
-        //   }
-        // }
         break;
       default:
         break;
@@ -464,15 +467,12 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-// void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-//   if (htim == &htim2) {
-//     if(pid.flag == 1){
-//       PID_Run(&pid, yaw);
-//       Emm_V5_Vel_Control_1(dir_m1, pid.Real_Speed[1], 50, 0);
-//       Emm_V5_Vel_Control_2(dir_m2, pid.Real_Speed[0], 50, 0);
-//     }
-//   }
-// }
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+  if (htim == &htim2) {
+    sprintf(text,"x:%.2f,y:%.2f,z:%.2f",x,y,z);
+    HAL_UART_Transmit_DMA(&huart6, (uint8_t *)text, sizeof(text));
+  }
+}
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
   if (huart == &huart4) {
@@ -480,7 +480,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
     // 拼接成uint32_t类型
       pos2 = (uint32_t)(
                       ((uint32_t)rxCmd2[3] << 24)    |
-                      ((uint32_t)rxCmd2[4] << 16)    | 
+                      ((uint32_t)rxCmd2[4] << 16)    |
                       ((uint32_t)rxCmd2[5] << 8)     |
                       ((uint32_t)rxCmd2[6] << 0)
                     );
